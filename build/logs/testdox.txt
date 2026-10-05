@@ -1,0 +1,14 @@
+Date Time To String
+ [x] Format tanggal berubah jam tetap sama
+ [x] Jam menit detik tidak bergeser
+ [x] Padding nol untuk hari bulan dan jam
+ [x] Nilai kosong mengembalikan strip
+ [x] Zero date mengembalikan strip
+ [x] Input bukan tanggal dikembalikan apa adanya
+ [x] Format kustom dapat diatur
+ [x] Fallback format tanggal saja tetap bisa diformat
+
+Health
+ [x] Is defined app path
+ [x] Base url has been set
+

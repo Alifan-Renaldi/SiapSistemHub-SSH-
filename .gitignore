@@ -1,0 +1,24 @@
+# CI4 writable runtime
+/writable/logs/*
+/writable/cache/*
+/writable/debugbar/*
+/writable/session/*
+/writable/uploads/*
+!/writable/**/.htaccess
+!/writable/**/index.html
+!/writable/.htaccess
+
+# Dependencies
+/node_modules/
+/vendor/
+
+# Environment
+.env
+/env
+!env.example
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

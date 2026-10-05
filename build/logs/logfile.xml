@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="10" assertions="14" errors="0" failures="0" skipped="0" time="0.044635">
+    <testsuite name="DateTimeToStringTest" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" tests="8" assertions="11" errors="0" failures="0" skipped="0" time="0.034800">
+      <testcase name="testFormatTanggalBerubahJamTetapSama" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="20" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="1" time="0.026530"/>
+      <testcase name="testJamMenitDetikTidakBergeser" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="25" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="2" time="0.001379"/>
+      <testcase name="testPaddingNolUntukHariBulanDanJam" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="33" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="1" time="0.001075"/>
+      <testcase name="testNilaiKosongMengembalikanStrip" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="38" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="2" time="0.001055"/>
+      <testcase name="testZeroDateMengembalikanStrip" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="44" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="2" time="0.001555"/>
+      <testcase name="testInputBukanTanggalDikembalikanApaAdanya" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="50" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="1" time="0.001736"/>
+      <testcase name="testFormatKustomDapatDiatur" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="55" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="1" time="0.000791"/>
+      <testcase name="testFallbackFormatTanggalSajaTetapBisaDiformat" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\DateTimeToStringTest.php" line="60" class="DateTimeToStringTest" classname="DateTimeToStringTest" assertions="1" time="0.000679"/>
+    </testsuite>
+    <testsuite name="HealthTest" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\HealthTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.009835">
+      <testcase name="testIsDefinedAppPath" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\HealthTest.php" line="12" class="HealthTest" classname="HealthTest" assertions="1" time="0.001020"/>
+      <testcase name="testBaseUrlHasBeenSet" file="C:\laragon\www\SiapSystemHubCIDevelopment\tests\unit\HealthTest.php" line="17" class="HealthTest" classname="HealthTest" assertions="2" time="0.008815"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

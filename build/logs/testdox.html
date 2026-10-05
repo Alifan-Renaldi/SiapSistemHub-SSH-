@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <title>Test Documentation</title>
+        <style>
+            body {
+                text-rendering: optimizeLegibility;
+                font-family: Source SansSerif Pro, Arial, sans-serif;
+                font-variant-ligatures: common-ligatures;
+                font-kerning: normal;
+                margin-left: 2rem;
+                background-color: #fff;
+                color: #000;
+            }
+
+            body > ul > li {
+                font-size: larger;
+            }
+
+            h2 {
+                font-size: larger;
+                text-decoration-line: underline;
+                text-decoration-thickness: 2px;
+                margin: 0;
+                padding: 0.5rem 0;
+            }
+
+            ul {
+                list-style: none;
+                margin: 0 0 2rem;
+                padding: 0 0 0 1rem;
+                text-indent: -1rem;
+            }
+
+            .success:before {
+                color: #4e9a06;
+                content: '✓';
+                padding-right: 0.5rem;
+            }
+
+            .defect {
+                color: #a40000;
+            }
+
+            .defect:before {
+                color: #a40000;
+                content: '✗';
+                padding-right: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Date Time To String</h2>
+        <ul>
+            <li class="success">Format tanggal berubah jam tetap sama</li>
+            <li class="success">Jam menit detik tidak bergeser</li>
+            <li class="success">Padding nol untuk hari bulan dan jam</li>
+            <li class="success">Nilai kosong mengembalikan strip</li>
+            <li class="success">Zero date mengembalikan strip</li>
+            <li class="success">Input bukan tanggal dikembalikan apa adanya</li>
+            <li class="success">Format kustom dapat diatur</li>
+            <li class="success">Fallback format tanggal saja tetap bisa diformat</li>
+        </ul>
+        <h2>Health</h2>
+        <ul>
+            <li class="success">Is defined app path</li>
+            <li class="success">Base url has been set</li>
+        </ul>
+    </body>
+</html>
