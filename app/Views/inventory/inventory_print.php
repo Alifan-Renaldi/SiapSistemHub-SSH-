@@ -315,7 +315,7 @@
             </div>
 
             <!-- Foto Kiri -->
-            <div class="text-photo" style="margin-top: 212px;">
+            <div class="text-photo" style="margin-top: 20px;">
                 <strong>Foto Sisi Kiri Mobil</strong>
                 <div class="photo-box">
                 <?php

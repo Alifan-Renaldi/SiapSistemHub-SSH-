@@ -207,6 +207,9 @@ class Reports extends BaseController
             } else {
                 $this->session->remove('warningmessage');
                 $data['survey'] = $surveyreport;
+
+                $firstRecord = $surveyreport[0];
+            $data['data_source'] = $firstRecord['data_source'] ?? 'survey';
             }
         }
     
@@ -487,7 +490,7 @@ class Reports extends BaseController
         }
         
         $data = [
-            'surveys' => $surveyreport,
+            'survey' => $surveyreport,
             'title' => 'Laporan Data Survey'
         ];
         return streamPdf('surveys/survey_pdf', $data, "Survey_Report_" . date('Y-m-d') . ".pdf", true);
@@ -678,61 +681,9 @@ class Reports extends BaseController
         return $rows;
     }
 
-    private function resolveWilayahNamesSurvey(array $rows): array
+    public function resolveWilayahNamesSurvey(array $rows): array
     {
-        if (empty($rows)) {
-            return $rows;
-        }
-
-        // Provinsi: daftar global, cukup 1x fetch
-        $province_map = [];
-        foreach ($this->driversModel->getProvinces() as $prov) {
-            $province_map[$prov['id']] = $prov['name'];
-        }
-
-        // Kabupaten/Kota: fetch per unique province ID
-        $regency_map = [];
-        $unique_provinces = array_unique(array_filter(array_column($rows, 's_prov'), function ($v) {
-            return $v !== '' && $v !== 'None';
-        }));
-        foreach ($unique_provinces as $pid) {
-            foreach ($this->driversModel->getRegencies($pid) as $reg) {
-                $regency_map[$reg['id']] = $reg['name'];
-            }
-        }
-
-        // Kecamatan: fetch per unique city ID
-        $district_map = [];
-        $unique_cities = array_unique(array_filter(array_column($rows, 's_kab'), function ($v) {
-            return $v !== '' && $v !== 'None';
-        }));
-        foreach ($unique_cities as $cid) {
-            foreach ($this->driversModel->getDistricts($cid) as $dis) {
-                $district_map[$dis['id']] = $dis['name'];
-            }
-        }
-
-        // Kelurahan: fetch per unique subdistrict ID
-        $village_map = [];
-        $unique_subdistricts = array_unique(array_filter(array_column($rows, 's_kec'), function ($v) {
-            return $v !== '' && $v !== 'None';
-        }));
-        foreach ($unique_subdistricts as $sid) {
-            foreach ($this->driversModel->getVillages($sid) as $vil) {
-                $village_map[$vil['id']] = $vil['name'];
-            }
-        }
-
-        // Terapkan nama ke setiap row
-        foreach ($rows as &$row) {
-            $row['s_province_name'] = $province_map[$row['s_prov']] ?? ($row['s_prov'] ?: '-');
-            $row['s_city_name']     = $regency_map[$row['s_kab']]     ?? ($row['s_kab'] ?: '-');
-            $row['s_district_name'] = $district_map[$row['s_kec']] ?? ($row['s_kec'] ?: '-');
-            $row['s_village_name']  = $village_map[$row['s_kel']]  ?? ($row['s_kel'] ?: '-');
-        }
-        unset($row);
-
-        return $rows;
+        return $this->driversModel->resolveWilayahNamesSurvey($rows);
     }
 
     public function export_driver_excel()

@@ -73,6 +73,12 @@
                                     <button type="submit" class="btn btn-link text-success p-0 border-0"><i class="fa fa-eye" title="Detail"></i></button>
                                  </form>
                            <?php endif; ?>
+                            <a href="javascript:void(0)" 
+                               class="btn btn-link text-info p-0 border-0"
+                               title="Print / Download Gambar"
+                               onclick="showPrintOptions(<?= $survey['s_id'] ?>, '<?= esc(date('d-m-Y', strtotime($survey['s_tanggal']))) ?>', '<?= esc($survey['s_supir']) ?>')">
+                                <i class="fa fa-print" title="Print"></i>
+                            </a>
                           <?php if (function_exists('userpermission') && userpermission('lr_drivers_delete_survey')) : ?>
                                     | <form id="delete-form-<?= esc($survey['s_id']) ?>" action="<?= base_url('drivers/survey_delete/' . $survey['s_id']) ?>" 
                                           method="post" 
@@ -95,6 +101,7 @@
 <?= view('layout/footer') ?>
 
 <script src="<?= base_url('assets/autoLogout.js') ?>"></script>
+<script src="<?= base_url('assets/js/html2canvas.min.js') ?>"></script>
 <script>
    const baseUrl = "<?= base_url() ?>"; 
     enableAutoLogout(7200, baseUrl + "login");
@@ -149,4 +156,148 @@ $(document).ready(function () {
     }).draw();
 });
 
+function showPrintOptions(id, tanggal, supir) {
+      Swal.fire({
+          title: '<i class="fa fa-print" style="color:#17a2b8; margin-right:8px;"></i> Print / Download',
+          html: '<div style="text-align:center; padding:10px 0;">' +
+                '<div style="background:#f8f9fa; border-radius:8px; padding:15px; margin-bottom:15px;">' +
+                '<table style="width:100%; font-size:14px; border-collapse:collapse;">' +
+                '<tr><td style="padding:8px; text-align:left; color:#868e96; font-weight:600; font-size:12px; text-transform:uppercase;">Tanggal Survey</td>' +
+                '<td style="padding:8px; text-align:right; font-weight:700; font-size:16px; color:#2c3e50;">'+ tanggal + '</td></tr>' +
+                '<tr><td style="padding:8px; text-align:left; color:#868e96; font-weight:600; font-size:12px; text-transform:uppercase;">Nama Supir</td>' +
+                '<td style="padding:8px; text-align:right; font-weight:700; font-size:16px; color:#2c3e50;">' + supir + '</td></tr>' +
+                '</table></div>' +
+                '</div>',
+          showDenyButton: true,
+          confirmButtonText: '<i class="fa fa-image"></i> Download Gambar',
+          denyButtonText: '<i class="fa fa-print"></i> Print',
+          confirmButtonColor: '#3085d6',
+          denyButtonColor: '#28a745',
+          width: 420,
+      }).then((result) => {
+          if (result.isConfirmed) {
+                chooseImageFormat(id, tanggal, supir);
+          } else if (result.isDenied) {
+              window.location.href = '<?= base_url('surveys/survey_print/') ?>' + id;
+          }
+      });
+   }
+
+function chooseImageFormat(id, tanggal, supir) {
+      Swal.fire({
+          title: '<i class="fa fa-image" style="color:#fd7e14; margin-right:8px;"></i> Download Gambar Survey',
+          html: '<p style="color:#666; font-size:13px; margin:0 0 12px;">Pilih format file gambar</p>' +
+                '<div style="display:flex; gap:8px; justify-content:center;">' +
+                '<button class="fmt-btn" data-format="jpg" style="background:#ffc107; color:#212529; border:none; border-radius:6px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;">JPG</button>' +
+                '<button class="fmt-btn" data-format="jpeg" style="background:#fd7e14; color:#fff; border:none; border-radius:6px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;">JPEG</button>' +
+                '<button class="fmt-btn" data-format="png" style="background:#007bff; color:#fff; border:none; border-radius:6px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;">PNG</button>' +
+                '</div>',
+          showCancelButton: true,
+          cancelButtonText: 'Batal',
+          cancelButtonColor: '#d33',
+          width: 420,
+          didOpen: () => {
+              document.querySelectorAll('.fmt-btn').forEach((btn) => {
+                  btn.addEventListener('click', () => {
+                      Swal.close();
+                      downloadSurveyImage(id, tanggal, supir, btn.getAttribute('data-format'));
+                  });
+              });
+          }
+      });
+   }
+
+async function downloadSurveyImage(id, tanggal, supir, format) {
+      const mime = (format === 'png') ? 'image/png' : 'image/jpeg';
+      const cleanSupir = (supir || 'survey').replace(/[^A-Za-z0-9_]/g, '_');
+      const cleanTanggal = (tanggal || '').replace(/[^A-Za-z0-9]/g, '-');
+      const filename = 'Survey_' + cleanSupir + '_' + cleanTanggal + '.' + format;
+
+      Swal.fire({
+          title: 'Membuat gambar...',
+          html: 'Mohon tunggu, gambar sedang diproses.',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+              Swal.showLoading();
+          }
+      });
+
+      let iframe = null;
+      try {
+          if (typeof html2canvas === 'undefined') {
+              throw new Error('Library html2canvas tidak termuat. Muat ulang halaman (Ctrl+F5) atau cek koneksi.');
+          }
+
+          const resp = await fetch(baseUrl + 'surveys/survey_image/' + id);
+          if (!resp.ok) {
+              throw new Error('Gagal memuat halaman survey (HTTP ' + resp.status + ')');
+          }
+          const html = await resp.text();
+
+          iframe = document.createElement('iframe');
+          iframe.style.cssText = 'position:fixed; left:-10000px; top:0; width:860px; height:1200px; border:none;';
+          document.body.appendChild(iframe);
+
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          iframeDoc.open();
+          iframeDoc.write(html);
+          iframeDoc.close();
+
+          await new Promise((resolve) => {
+              if (iframeDoc.readyState === 'complete') {
+                  resolve();
+              } else {
+                  iframe.addEventListener('load', resolve);
+                  setTimeout(resolve, 4000);
+              }
+          });
+
+          await Promise.race([
+              Promise.all(Array.from(iframeDoc.images).map((img) => {
+                  if (img.complete) return Promise.resolve();
+                  return new Promise((resolve) => {
+                      img.addEventListener('load', resolve);
+                      img.addEventListener('error', resolve);
+                  });
+              })),
+              new Promise((resolve) => setTimeout(resolve, 5000))
+          ]);
+
+          const captureArea = iframeDoc.querySelector('#survey-capture-area') || iframeDoc.body;
+          const canvas = await html2canvas(captureArea, {
+              scale: 2,
+              backgroundColor: '#ffffff',
+              logging: false,
+              windowWidth: 860
+          });
+
+          const dataUrl = canvas.toDataURL(mime, 0.95);
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          Swal.fire({
+              icon: 'success',
+              title: 'Gambar berhasil diunduh!',
+              text: filename,
+              timer: 2500,
+              showConfirmButton: false
+          });
+      } catch (e) {
+          console.error(e);
+          Swal.fire({
+              icon: 'error',
+              title: 'Gagal membuat gambar',
+              text: e.message || 'Terjadi kesalahan saat memproses gambar.'
+          });
+      } finally {
+          if (iframe && iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+          }
+      }
+   }
 </script>

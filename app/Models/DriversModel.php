@@ -20,25 +20,111 @@ class DriversModel extends Model
         return $this->where('d_nis', $d_nis)->get()->getResultArray();
     }
 
+    public function resolveWilayahNamesSurvey(array $rows): array
+    {
+        if (empty($rows)) {
+            return $rows;
+        }
+
+        $province_map = [];
+        foreach ($this->getProvinces() as $prov) {
+            $province_map[$prov['id']] = $prov['name'];
+        }
+
+        $regency_map = [];
+        $unique_provinces = array_unique(array_filter(array_column($rows, 's_prov'), function ($v) {
+            return $v !== '' && $v !== 'None';
+        }));
+        foreach ($unique_provinces as $pid) {
+            foreach ($this->getRegencies($pid) as $reg) {
+                $regency_map[$reg['id']] = $reg['name'];
+            }
+        }
+
+        $district_map = [];
+        $unique_cities = array_unique(array_filter(array_column($rows, 's_kab'), function ($v) {
+            return $v !== '' && $v !== 'None';
+        }));
+        foreach ($unique_cities as $cid) {
+            foreach ($this->getDistricts($cid) as $dis) {
+                $district_map[$dis['id']] = $dis['name'];
+            }
+        }
+
+        $village_map = [];
+        $unique_subdistricts = array_unique(array_filter(array_column($rows, 's_kec'), function ($v) {
+            return $v !== '' && $v !== 'None';
+        }));
+        foreach ($unique_subdistricts as $sid) {
+            foreach ($this->getVillages($sid) as $vil) {
+                $village_map[$vil['id']] = $vil['name'];
+            }
+        }
+
+        foreach ($rows as &$row) {
+            $row['s_province_name'] = $province_map[$row['s_prov']] ?? ($row['s_prov'] ?: '-');
+            $row['s_city_name']     = $regency_map[$row['s_kab']]     ?? ($row['s_kab'] ?: '-');
+            $row['s_district_name'] = $district_map[$row['s_kec']] ?? ($row['s_kec'] ?: '-');
+            $row['s_village_name']  = $village_map[$row['s_kel']]  ?? ($row['s_kel'] ?: '-');
+        }
+        unset($row);
+
+        return $rows;
+    }
+
     /**
      * Fetch data from the Indonesian region API (emsifa)
+     * with a local file cache (TTL 7 days) so PDF rendering and page loads
+     * never depend on external API latency — or availability.
      */
     private function fetchData($endpoint)
     {
+        $cacheKey = 'wilayah_' . preg_replace('/[^A-Za-z0-9_\-]/', '_', $endpoint) . '.json';
+        $cacheFile = WRITEPATH . 'cache/' . $cacheKey;
+        $cacheTtl = 7 * 24 * 3600; // 7 days
+
+        // 1) Serve from cache when fresh
+        if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
+            $cached = @file_get_contents($cacheFile);
+            if ($cached !== false && $cached !== '') {
+                $decoded = json_decode($cached, true);
+                if (is_array($cached_data = $decoded) && !empty($cached_data)) {
+                    return $cached_data;
+                }
+            }
+        }
+
+        // 2) Fetch from API with hard timeouts (never hang the request)
         $url = "https://www.emsifa.com/api-wilayah-indonesia/api/" . $endpoint;
         
         try {
             $client = \Config\Services::curlrequest();
             $response = $client->get($url, [
-                'timeout' => 0,
+                'timeout' => 10,
+                'connect_timeout' => 5,
                 'verify'  => false,
             ]);
             
             if ($response->getStatusCode() === 200) {
-                return json_decode($response->getBody(), true);
+                $data = json_decode($response->getBody(), true);
+                if (is_array($data) && !empty($data)) {
+                    @file_put_contents($cacheFile, json_encode($data));
+                }
+                return $data ?: [];
             }
         } catch (\Exception $e) {
-            log_message('error', 'Failed to fetch region data: ' . $e->getMessage());
+            log_message('error', 'Gagal Mengambil Data: ' . $e->getMessage());
+        }
+
+        // 3) API failed: fall back to stale cache rather than empty data
+        if (is_file($cacheFile)) {
+            $stale = @file_get_contents($cacheFile);
+            if ($stale !== false) {
+                $decoded = json_decode($stale, true);
+                if (is_array($decoded) && !empty($decoded)) {
+                    return $decoded;
+                }
+            }
         }
         
         return [];
@@ -476,7 +562,7 @@ class DriversModel extends Model
 
     public function edit_training($tr_id, $data)
     {
-        return $this->db->table('trainings', $tr_id)
+        return $this->db->table('trainings')
                        ->where('tr_id', $tr_id)
                        ->update($data);
     }

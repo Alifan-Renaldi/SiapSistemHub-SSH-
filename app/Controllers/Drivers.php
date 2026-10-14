@@ -1322,6 +1322,94 @@ class Drivers extends BaseController
         }
     }
 
+    public function printsurvey($survey_id)
+    {
+        $surveydetails = $this->driversModel->get_surveydetails($survey_id);
+        if (!$surveydetails) {
+            session()->setFlashdata('error', 'Data tidak ditemukan.');
+            return redirect()->to('surveys/survey_management');
+        }
+
+        $surveydetails = $this->driversModel->resolveWilayahNamesSurvey($surveydetails);
+
+        if ($this->request->getVar('new') === 'true') {
+        session()->setFlashdata('successmessage', 'Survey Berhasil Ditambahkan.');
+        }
+
+        return view('surveys/survey_print', ['surveydetails' => $surveydetails]);
+    }
+
+    public function downloadSurveyPdf($survey_id)
+    {
+        try {
+            $surveydetails = $this->driversModel->get_surveydetails($survey_id);
+            if (!$surveydetails) {
+                session()->setFlashdata('error', 'Data tidak ditemukan.');
+                return redirect()->to('surveys/survey_management');
+            }
+
+            // resolveWilayahNamesSurvey expects array-of-rows; resolve region
+            // names but never let a wilayah API failure block the PDF download
+            try {
+                $surveydetails = $this->driversModel->resolveWilayahNamesSurvey($surveydetails);
+            } catch (\Throwable $e) {
+                log_message('error', 'Wilayah resolve failed for survey #' . $survey_id . ': ' . $e->getMessage());
+            }
+
+            $singleItem = $surveydetails[0];
+            unset($surveydetails);
+
+            $supir = $singleItem['s_supir'] ?? 'survey';
+            $cleanSurvey = preg_replace('/[^A-Za-z0-9_]/', '_', $supir);
+            $filename = "Survey_{$cleanSurvey}_" . date('Y-m-d') . ".pdf";
+            unset($supir, $cleanSurvey);
+
+            $data = [
+                'surveys' => $singleItem,
+            ];
+            unset($singleItem);
+
+            return streamPdf('surveys/data_survey_pdf', $data, $filename, true);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal generate PDF survey #' . $survey_id . ': ' . $e->getMessage());
+            session()->setFlashdata('error', 'Gagal membuat PDF: ' . $e->getMessage());
+            return redirect()->to('surveys/survey_management');
+        }
+    }
+
+    public function downloadSurveyImage($survey_id)
+    {
+        try {
+            $surveydetails = $this->driversModel->get_surveydetails($survey_id);
+            if (!$surveydetails) {
+                session()->setFlashdata('error', 'Data tidak ditemukan.');
+                return redirect()->to('surveys/survey_management');
+            }
+
+            // resolveWilayahNamesSurvey expects array-of-rows; resolve region
+            // names but never let a wilayah API failure block the image page
+            try {
+                $surveydetails = $this->driversModel->resolveWilayahNamesSurvey($surveydetails);
+            } catch (\Throwable $e) {
+                log_message('error', 'Wilayah resolve failed for survey image #' . $survey_id . ': ' . $e->getMessage());
+            }
+
+            $singleItem = $surveydetails[0];
+            unset($surveydetails);
+
+            $data = [
+                'surveys' => $singleItem,
+            ];
+            unset($singleItem);
+
+            return view('surveys/survey_image', $data);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal generate image survey #' . $survey_id . ': ' . $e->getMessage());
+            session()->setFlashdata('error', 'Gagal membuat gambar survey: ' . $e->getMessage());
+            return redirect()->to('surveys/survey_management');
+        }
+    }
+
     public function surveylist_drivers()
     {
         $data['surveylist_drivers'] = $this->driversModel->get_survey();
@@ -1667,6 +1755,75 @@ class Drivers extends BaseController
         return view('trainings/training_management', $data);
     }
 
+    private function generateDocumentTraining($driverName, $trainingNumber, $extension)
+    {
+        $cleanDriverName = preg_replace('/[^A-Za-z0-9]/', '', $driverName);
+        $cleanDriverName = strtoupper($cleanDriverName);
+        
+        $cleantrainingNumber = preg_replace('/[^A-Za-z0-9]+/', '.', $trainingNumber);
+        $cleantrainingNumber = strtoupper($cleantrainingNumber);
+        
+        $cleantrainingNumber = trim($cleantrainingNumber, '.');
+        
+        $extension = strtolower($extension);
+        
+        $filename = $cleanDriverName . '_' . $cleantrainingNumber . '.' . $extension;
+        
+        if (strlen($filename) > 255) {
+            $maxLength = 255 - strlen($extension) - 2;
+            $maxDriverLength = floor($maxLength / 2);
+            $maxBapLength = $maxLength - $maxDriverLength;
+            
+            $cleanDriverName = substr($cleanDriverName, 0, $maxDriverLength);
+            $cleantrainingNumber = substr($cleantrainingNumber, 0, $maxBapLength);
+            
+            $filename = $cleanDriverName . '_' . $cleantrainingNumber . '.' . $extension;
+        }
+        
+        return $filename;
+    }
+
+    private function upload_modultraining($driverName = '', $trainingNumber = '', $oldFileName = '') 
+    {
+        $file = $this->request->getFile('tr_document');
+
+        if (!($file && $file->isValid() && !$file->hasMoved())) {
+            return null;
+        }
+
+        if ($file->getMimeType() !== 'application/pdf' && strtolower($file->getClientExtension()) !== 'pdf') {
+            return false;
+        }
+
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return false;
+        }
+
+        $uploadPath = FCPATH . 'assets/uploads/training/';
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
+        $extension = $file->guessExtension();
+        $newName = $this->generateDocumentTraining($driverName, $trainingNumber, $extension);
+
+        $baseName = pathinfo($newName, PATHINFO_FILENAME);
+        $counter = 1;
+        while (file_exists($uploadPath . $newName) && $newName !== $oldFileName) {
+            $newName = $baseName . '_' . $counter . '.' . $extension;
+            $counter++;
+        }
+
+        if ($file->move($uploadPath, $newName, $newName === $oldFileName)) {
+            if (!empty($oldFileName) && $oldFileName !== $newName && file_exists($uploadPath . $oldFileName)) {
+                unlink($uploadPath . $oldFileName);
+            }
+            return $newName;
+        }
+
+        return false;
+    }
+
     public function addtraining() 
     {
         $data['driverlist'] = $this->driversModel->getall_drivers(); 
@@ -1693,6 +1850,18 @@ class Drivers extends BaseController
         
         $data['tr_created_by'] = session()->get('user_id');
         $data['tr_created_date'] = date('Y-m-d H:i:s');
+        $driverName = $data['tr_supir'] ?? '';
+        $trainingNumber = $data['tr_code'] ?? '';
+        $oldPdf = $data['existing_pdf'] ?? '';
+
+        $pdf_document = $this->upload_modultraining($driverName, $trainingNumber, $oldPdf);
+            if ($pdf_document === false) {
+                session()->setFlashdata('warningmessage', 'Gagal mengunggah Modul Training. Format harus PDF dan ukuran maksimal 5MB.');
+                return redirect()->to('trainings/training_management');
+            }
+
+        $data['tr_document'] = $pdf_document ?: $oldPdf;
+        unset($data['existing_pdf']);
 
         $insertTraining = $this->driversModel->add_training($data);
         if ($insertTraining) {
@@ -1716,7 +1885,7 @@ class Drivers extends BaseController
 
         $training = $this->driversModel->get_trainingdetails($tr_id);
 
-        if ($training) {
+        if ($training && isset($training[0])) {
             return $this->response->setJSON([
                 'status' => true,
                 'data'   => $training[0]
@@ -1741,38 +1910,44 @@ class Drivers extends BaseController
             $data['tr_supir'] = implode(', ', $data['tr_supir']);
         }
 
-        $data['tr_created_by'] = session()->get('user_id');
         $data['tr_modified_date'] = date('Y-m-d H:i:s');
-        
+        $driverName = $data['tr_supir'] ?? '';
+        $trainingNumber = $data['tr_code'] ?? '';
+        $oldPdf = $data['existing_pdf'] ?? null;
+
+        $pdf_document = $this->upload_modultraining($driverName, $trainingNumber, $oldPdf);
+            if ($pdf_document === false) {
+                session()->setFlashdata('warningmessage', 'Gagal mengunggah Modul Training. Format harus PDF dan ukuran maksimal 5MB.');
+                return redirect()->to('trainings/training_management');
+            }
+
+            
         $training_id = $data['tr_id'];
+        $data['tr_document'] = $pdf_document ?: $oldPdf;
         unset($data['tr_id']);
         unset($data['csrf_token']);
-        
-        $nis = $data['tr_nis'] ?? 'training';
+        unset($data['existing_pdf']);
         
         $update_training = $this->driversModel->edit_training($training_id, $data);
-        if($update_training){
-            if ($update_training) {
-                return redirect()->to('trainings/training_management')->with('successmessage', 'Survey updated successfully.');
-            } else {
-                return redirect()->to('surveys/editsurvey/' . $survey_id)->with('warningmessage', 'Something went wrong. Try again.');
-            }
+        if ($update_training) {
+            return redirect()->to('trainings/training_management')->with('successmessage', 'Training updated successfully.');
+        } else {
+            return redirect()->to('trainings/training_management')->with('warningmessage', 'Something went wrong. Try again.');
         }
-
-        return redirect()-to('trainings/training_management');
-
     }
 
-    public function training_delete()
+    public function training_delete($tr_id = null)
     {
-        $tr_id = $this->request->getUri()->getSegment(3);
+        if ($tr_id === null) {
+            $tr_id = $this->request->getUri()->getSegment(3);
+        }
         $returndata = $this->driversModel->training_delete($tr_id);
         if ($returndata) {
             session()->setFlashdata('successmessage', 'Training deleted successfully..');
             return redirect()->to('trainings/training_management');
         } else {
             session()->setFlashdata('warningmessage', 'Error..! Some driver are mapped with this group. Please remove from Training management');
-            return redirect()->to('drivers/traininglist_drivers');
+            return redirect()->to('trainings/training_management');
         }
     }
 
@@ -1787,7 +1962,7 @@ class Drivers extends BaseController
 
         $training = $this->driversModel->get_trainingdetails($tr_id);
 
-        if ($training) {
+        if ($training && isset($training[0])) {
             return $this->response->setJSON([
                 'status' => true,
                 'data'   => $training[0]

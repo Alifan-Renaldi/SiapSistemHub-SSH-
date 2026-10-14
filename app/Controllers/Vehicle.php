@@ -101,7 +101,7 @@ class Vehicle extends BaseController
             if (!empty($data[$field])) {
                 if (preg_match('/^\d{2}\-\d{2}\-\d{4}$/', $data[$field])) {
                     $dateObj = \DateTime::createFromFormat('d-m-Y', $data[$field]);
-                    if ($dateObj) {
+                    if ($dateObj) { 
                         $data[$field] = $dateObj->format('Y-m-d');
                     }
                 }

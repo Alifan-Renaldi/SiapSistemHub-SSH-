@@ -70,6 +70,9 @@ $routes->post('drivers/insertsurvey', 'Drivers::insertsurvey');
 $routes->post('drivers/updatesurvey', 'Drivers::updatesurvey');
 $routes->post('surveys/survey_view', 'Drivers::viewsurvey');
 $routes->post('drivers/survey_delete/(:num)', 'Drivers::survey_delete/$1');
+$routes->get('surveys/survey_print/(:num)', 'Drivers::printsurvey/$1');
+$routes->get('surveys/data_survey_pdf/(:num)', 'Drivers::downloadSurveyPdf/$1');
+$routes->get('surveys/survey_image/(:num)', 'Drivers::downloadSurveyImage/$1');
 
 //training
 $routes->get('trainings/training_management', 'Drivers::traininglist_drivers');

@@ -64,6 +64,7 @@
         /* ============== DETAIL TRAINING MODAL STYLES ============== */
         .btn-detail-training, .btn-detail-tema {
             font-weight: 500 !important;
+            font-family: inherit;
         }
         .btn-detail-training:hover {
             color: #0056b3 !important;
@@ -185,7 +186,7 @@
     </div>
 </section>
 
-<!-- Update the modal to handle both add and edit -->
+<!-- Insert the modal to handle both add and edit -->
 <div class="modal fade" id="trainingModal" tabindex="-1" role="dialog" aria-labelledby="trainingModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -195,7 +196,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="trainingForm" action="<?= base_url('drivers/inserttraining'); ?>" method="POST" class="needs-validation" novalidate>
+            <form id="trainingForm" action="<?= base_url('drivers/inserttraining'); ?>" method="POST" class="needs-validation" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="<?= csrf_token(); ?>" value="<?= csrf_hash(); ?>" />
                  <input type="hidden" id="tr_id" name="tr_id" value="">
                  <input type="hidden" id="tr_nis" name="tr_nis" value="">
@@ -268,6 +269,10 @@
                         <label for="trainingDescription">Keterangan</label>
                         <textarea class="form-control" id="trainingDescription" name="tr_keterangan" rows="3"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tr_document">Upload Modul Training (PDF) <span class="form-required" style="color: red;">*</span></label>
+                        <input type="file" name="tr_document" id="tr_document" class="form-control" accept=".pdf,application/pdf">
+                    </div>
                 </div>
                 <input type="hidden" id="tr_modified_date" name="tr_modified_date" value="<?= date('Y-m-d H:i:s'); ?>">
                 <div class="modal-footer">
@@ -288,7 +293,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="editTrainingForm" action="<?= base_url('drivers/updatetraining'); ?>" method="POST" class="needs-validation" novalidate>
+            <form id="editTrainingForm" action="<?= base_url('drivers/updatetraining'); ?>" method="POST" class="needs-validation" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="<?= csrf_token(); ?>" value="<?= csrf_hash(); ?>" />
                 <input type="hidden" id="edit_tr_id" name="tr_id" value="">
                 <input type="hidden" id="edit_tr_nis" name="tr_nis" value="">
@@ -361,6 +366,12 @@
                         <label for="edit_trainingDescription">Keterangan</label>
                         <textarea class="form-control" id="edit_trainingDescription" name="tr_keterangan" rows="3"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit_tr_document">Ganti Modul Training (PDF)</label>
+                        <input type="file" name="tr_document" id="edit_tr_document" class="form-control" accept=".pdf,application/pdf">
+                        <input type="hidden" name="existing_pdf" id="existing_pdf" value="">
+                        <small id="current_tr_document" class="form-text text-muted" style="display:none;"></small>
+                    </div>
                 </div>
                 <input type="hidden" id="edit_tr_modified_date" name="tr_modified_date" value="<?= date('Y-m-d H:i:s'); ?>">
                 <div class="modal-footer">
@@ -384,52 +395,65 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <!-- First Column -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label><strong>Nomor Training</strong></label>
-                            <div class="form-control-plaintext border-bottom" id="viewTrCode"></div>
-                        </div>
-                        <div class="form-group">
-                            <label><strong>Nomor Induk Supir</strong></label>
-                            <div class="form-control-plaintext border-bottom" id="viewTrNis"></div>
-                        </div>
-                        <div class="form-group">
-                            <label><strong>Kategori</strong></label>
-                            <div class="form-control-plaintext border-bottom" id="viewCategory"></div>
-                        </div>
-                        <div class="form-group">
-                            <label><strong>Pemateri</strong></label>
-                            <div class="form-control-plaintext border-bottom" id="viewTrainer"></div>
+                    <div class="col-md-4">
+                        <div class="card-body">
+                    <div class="col-md-12">
+                            <h3 class="text-center"><strong>Modul Training Supir</strong></h3>
+                            <hr>
+                            <div class="text-center" id="viewTrDocument"></div>
                         </div>
                     </div>
-                    
-                    <!-- Second Column -->
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label><strong>Tanggal Training</strong></label>
-                            <div class="form-control-plaintext border-bottom" id="viewTrainingDate"></div>
-                        </div>
-                        <div class="form-group">
-                            <label><strong>Nama Supir</strong></label>
-                            <div class="form-control-plaintext border-bottom text-primary font-weight-bold">
-                                <a href="#" class="btn-detail-training text-primary" data-driver-name="<?= esc($traininglist_driversdata['tr_supir']); ?>" data-driver-nis="<?= esc($traininglist_driversdata['tr_nis']); ?>" style="cursor: pointer; text-decoration: none; font-weight: 500;">
-                                    <i class="fa fa-users mr-1"></i><?= esc($traininglist_driversdata['tr_supir']); ?>
-                                </a>
+                </div>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <!-- First Column -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><strong>Nomor Training</strong></label>
+                                    <div class="form-control-plaintext border-bottom" id="viewTrCode"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label><strong>Nomor Induk Supir</strong></label>
+                                    <div class="form-control-plaintext border-bottom" id="viewTrNis"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label><strong>Kategori</strong></label>
+                                    <div class="form-control-plaintext border-bottom" id="viewCategory"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label><strong>Pemateri</strong></label>
+                                    <div class="form-control-plaintext border-bottom" id="viewTrainer"></div>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label><strong>Tema</strong></label>
-                            <div class="form-control-plaintext border-bottom text-success font-weight-bold">
-                                <a href="#" class="btn-detail-tema text-success" data-tema-name="<?= esc($traininglist_driversdata['tr_tema']); ?>" style="cursor: pointer; text-decoration: none; font-weight: 500;">
-                                    <i class="fa fa-book mr-1"></i><?= esc($traininglist_driversdata['tr_tema']); ?>
-                                </a>
+                            
+                            <!-- Second Column -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label><strong>Tanggal Training</strong></label>
+                                    <div class="form-control-plaintext border-bottom" id="viewTrainingDate"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label><strong>Nama Supir</strong></label>
+                                    <div class="form-control-plaintext border-bottom text-primary font-weight-bold">
+                                        <a href="#" id="viewDetailTrainingLink" class="btn-detail-training text-primary" data-driver-name="" data-driver-nis="" style="cursor: pointer; text-decoration: none; font-weight: 500;">
+                                            <i class="fa fa-users mr-1"></i><span id="viewTrSupir"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label><strong>Tema</strong></label>
+                                    <div class="form-control-plaintext border-bottom text-success font-weight-bold">
+                                        <a href="#" id="viewDetailTemaLink" class="btn-detail-tema text-success" data-tema-name="" style="cursor: pointer; text-decoration: none; font-weight: 500;">
+                                            <i class="fa fa-book mr-1"></i><span id="viewTrainingTheme"></span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><strong>Lokasi</strong></label>
+                                    <div class="form-control-plaintext border-bottom" id="viewLocation"></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label><strong>Lokasi</strong></label>
-                            <div class="form-control-plaintext border-bottom" id="viewLocation"></div>
                         </div>
                     </div>
                 </div>
@@ -711,6 +735,13 @@ $(document).on('click', '.edit-training', function(e) {
             $('#edit_trainingTheme').val(d.tr_tema);
             $(`input[name="tr_lokasi"][value="${d.tr_lokasi}"]`).prop('checked', true);
             $('#edit_trainingDescription').val(d.tr_keterangan);
+            $('#existing_pdf').val(d.tr_document || '');
+            if (d.tr_document) {
+                $('#current_tr_document').html('File saat ini: <a href="' + baseUrl + 'assets/uploads/training/' + d.tr_document + '" target="_blank">' + d.tr_document + '</a>').show();
+            } else {
+                $('#current_tr_document').hide().empty();
+            }
+            $('#edit_tr_document').val('');
 
             const supirValue = d.tr_supir;
             $('#edit_tr_supir').val(supirValue).trigger('change');
@@ -754,7 +785,7 @@ $('#trainingModal').on('show.bs.modal', function (e) {
 // Form validation
 (function() {
     'use strict';
-    const addForm = document.getElementById('addTrainingForm');
+    const addForm = document.getElementById('trainingForm');
     if (addForm) {
         addForm.addEventListener('submit', function(e) {
             if (!this.checkValidity()) {
@@ -773,6 +804,12 @@ $('#trainingModal').on('show.bs.modal', function (e) {
 
             if (!$('input[name="tr_lokasi"]:checked').length) {
                 $('input[name="tr_lokasi"]').closest('.form-group').find('.invalid-feedback').show();
+                e.preventDefault(); e.stopPropagation();
+            }
+
+            const trDocument = document.getElementById('tr_document');
+            if (!trDocument.files || trDocument.files.length === 0) {
+                showNotification('Harap unggah Modul Training (PDF).', 'error');
                 e.preventDefault(); e.stopPropagation();
             }
 
@@ -806,6 +843,37 @@ $('#trainingModal').on('show.bs.modal', function (e) {
         }, false);
     }
 })();
+
+// Validasi upload modul training (PDF, maks 5MB)
+function validateTrainingPdf(input) {
+    const file = input.files[0];
+    if (!file) return true;
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const sizeMB = file.size / (1024 * 1024);
+    if (!isPdf) {
+        showNotification('Format file modul training hanya PDF.', 'error');
+        input.value = '';
+        return false;
+    }
+    if (sizeMB > 5) {
+        showNotification('Ukuran file modul training maksimal 5MB.', 'error');
+        input.value = '';
+        return false;
+    }
+    return true;
+}
+document.getElementById('tr_document').addEventListener('change', function () { validateTrainingPdf(this); });
+document.getElementById('edit_tr_document').addEventListener('change', function () { validateTrainingPdf(this); });
+
+// Reset modal edit training saat ditutup
+$('#editTrainingModal').on('hidden.bs.modal', function () {
+    $('#editTrainingForm')[0].reset();
+    $('#existing_pdf').val('');
+    $('#current_tr_document').hide().empty();
+    $('#edit_tr_document').val('');
+    $('#editTrainingForm').removeClass('was-validated');
+    $('#editTrainingForm').find('.invalid-feedback').hide();
+});
 
 // Radio button validation
 document.querySelectorAll('input[name="tr_lokasi"]').forEach(function(radio) {
@@ -842,6 +910,7 @@ $(document).on('click', 'a[href*="viewtraining"]', function(e) {
         dataType: 'json',
         success: function(response) {
             try {
+                $('#viewTrDocument').empty();
                 if(response.status) {
                     let format = response.data || {};
                     // Populate the modal with the data
@@ -880,6 +949,19 @@ $(document).on('click', 'a[href*="viewtraining"]', function(e) {
                     $('#viewLocation').text(response.data.tr_lokasi || '-');
                     $('#viewTrainingDescription').text(response.data.tr_keterangan || '-');
                     $('#viewCreatedBy').text(response.data.creator_name || response.data.tr_created_by || '-');
+                    $('#viewDetailTrainingLink').attr('data-driver-name', response.data.tr_supir || '').attr('data-driver-nis', response.data.tr_nis || '');
+                    $('#viewDetailTemaLink').attr('data-tema-name', response.data.tr_tema || '');
+
+                    const trDocument = response.data.tr_document || '';
+                    if (trDocument) {
+                        const trainingModul = baseUrl + 'assets/uploads/training/' + trDocument;
+                        $('#viewTrDocument').html(
+                            '<embed src="' + trainingModul + '" type="application/pdf" style="width: 100%; height: 250px; border: 1px solid #ddd;">' +
+                            '<p class="mt-2"><a href="' + trainingModul + '" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-file-pdf"></i> View Full PDF</a></p>'
+                        );
+                    } else {
+                        $('#viewTrDocument').html('<p class="text-muted">Tidak ada modul training yang diunggah.</p>');
+                    }
 
                     
                     // Show the modal
@@ -913,6 +995,7 @@ $(document).on('click', '.btn-detail-training', function(e) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'Nama supir tidak ditemukan' });
         return;
     }
+    $('#modalDetailTema').modal('hide');
     $('#modalDetailTraining').modal('show');
     $('#detailDriverName').text(driverName);
     $('#detailDriverNIS').text(driverNIS || '-');
@@ -955,7 +1038,7 @@ function renderTrainingList(data, total) {
     data.forEach(function(training, index) {
         const rowNumber = index + 1;
         const keteranganTooltip = training.tr_keterangan && training.tr_keterangan !== '-' ? 'data-toggle="tooltip" data-placement="top" title="'+training.tr_keterangan+'"' : '';
-        const row = '<tr><td class="text-center">'+rowNumber+'</td><td class="text-center"><code>'+training.tr_code+'</code></td><td class="text-center">'+training.tr_tanggal+'</td><td class="text-center"><strong class="text-success">'+training.tr_tema+'</strong>'+(training.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(training.tr_kategori)+'">'+training.tr_kategori+'</span></td><td class="text-center">'+training.tr_pemateri+'</td><td class="text-center">'+training.tr_lokasi+'</td></tr>';
+        const row = '<tr><td class="text-center">'+rowNumber+'</td><td class="text-center"><code>'+training.tr_code+'</code></td><td class="text-center">'+training.tr_tanggal+'</td><td class="text-center">'+ '<a href="#" class="btn-detail-tema text-success" data-tema-name="<?= esc($traininglist_driversdata['tr_tema']); ?>" style="cursor: pointer; text-decoration: none; font-weight: 500;">' + '<i class="fa fa-book mr-1"></i>'+ '<strong>' + training.tr_tema + '</strong>' + '</a></td>'+(training.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(training.tr_kategori)+'">'+training.tr_kategori+'</span></td><td class="text-center">'+training.tr_pemateri+'</td><td class="text-center">'+training.tr_lokasi+'</td></tr>';
         tbody.append(row);
     });
     $('[data-toggle="tooltip"]').tooltip();
@@ -983,6 +1066,7 @@ $(document).on('click', '.btn-detail-tema', function(e) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'Nama tema tidak ditemukan' });
         return;
     }
+    $('#modalDetailTraining').modal('hide');
     $('#modalDetailTema').modal('show');
     $('#detailTemaName').text(temaName);
     showLoadingTemaState();
@@ -1023,7 +1107,7 @@ function renderTemaList(data, total) {
     const tbody = $('#temaListBody'); tbody.empty();
     data.forEach(function(row, index) {
         const keteranganTooltip = row.tr_keterangan && row.tr_keterangan !== '-' ? 'data-toggle="tooltip" data-placement="top" title="'+row.tr_keterangan+'"' : '';
-        const html = '<tr><td class="text-center">'+(index+1)+'</td><td class="text-center"><code>'+row.tr_code+'</code></td><td class="text-center">'+row.tr_tanggal+'</td><td class="text-center"><strong class="text-primary">'+row.tr_supir+'</strong>'+(row.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center">'+row.tr_nis+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(row.tr_kategori)+'">'+row.tr_kategori+'</span></td><td class="text-center">'+row.tr_pemateri+'</td><td class="text-center">'+row.tr_lokasi+'</td></tr>';
+        const html = '<tr><td class="text-center">'+(index+1)+'</td><td class="text-center"><code>'+row.tr_code+'</code></td><td class="text-center">'+row.tr_tanggal+'</td><td class="text-center"><strong class="text-primary">'+ '<a href="#" class="btn-detail-training text-primary" data-driver-name="<?= esc($traininglist_driversdata['tr_supir']); ?>" data-driver-nis="<?= esc($traininglist_driversdata['tr_nis']); ?>" style="cursor: pointer; text-decoration: none; font-weight: 500;">'+ '<i class="fa fa-users mr-1"></i>'+ '<strong>'+ row.tr_supir + '</strong>' + '</a>' +'</strong>'+(row.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center">'+row.tr_nis+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(row.tr_kategori)+'">'+row.tr_kategori+'</span></td><td class="text-center">'+row.tr_pemateri+'</td><td class="text-center">'+row.tr_lokasi+'</td></tr>';
         tbody.append(html);
     });
     $('[data-toggle="tooltip"]').tooltip();

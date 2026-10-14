@@ -91,7 +91,14 @@
     </div>
     
     <div class="report-info">
-        <div>Total Survey: <?= count($surveys) ?></div>
+        <div>Total Survey:
+            <?php
+                if (isset($surveys) && is_array($surveys)) {
+                $count = count($surveys);
+                    }
+                echo $count;
+            ?>
+        </div>
     </div>
     
     <table>

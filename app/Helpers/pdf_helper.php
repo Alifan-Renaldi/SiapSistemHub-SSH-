@@ -21,7 +21,10 @@ function renderPdf(string $view, array $data = [], string $filename = 'document.
 
     $options = new Options();
     $options->set('defaultFont', $config->defaultFont);
-    $options->set('isRemoteEnabled', true);
+    // Remote fetching MUST stay disabled: on a single-worker dev server, Dompdf
+    // requesting images over HTTP from this same server deadlocks the download.
+    // All views must reference local file paths (see pdf_local_image()).
+    $options->set('isRemoteEnabled', false);
     $options->set('chroot', FCPATH);
 
     $dompdf = new Dompdf($options);
@@ -77,7 +80,10 @@ function streamPdf(string $view, array $data = [], string $filename = 'document.
 
     $options = new Options();
     $options->set('defaultFont', $config->defaultFont);
-    $options->set('isRemoteEnabled', true);
+    // Remote fetching MUST stay disabled: on a single-worker dev server, Dompdf
+    // requesting images over HTTP from this same server deadlocks the download.
+    // All views must reference local file paths (see pdf_local_image()).
+    $options->set('isRemoteEnabled', false);
     $options->set('chroot', FCPATH);
 
     $dompdf = new Dompdf($options);
@@ -114,12 +120,40 @@ function streamPdf(string $view, array $data = [], string $filename = 'document.
     return $response
         ->setStatusCode(200)
         ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Transfer-Encoding', 'binary')
         ->setHeader('Content-Disposition', $disposition . '; filename="' . $filename . '"; filename*=UTF-8\'\'' . $safeFilename)
         ->setHeader('Content-Length', (string) strlen($pdfOutput))
         ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         ->setHeader('Pragma', 'no-cache')
         ->setHeader('Expires', '0')
         ->setHeader('Accept-Ranges', 'none')
+        ->setHeader('Accept-Ranges', 'none')
         ->setHeader('X-Content-Type-Options', 'nosniff')
         ->setBody($pdfOutput);
+}
+
+/**
+ * Resolve a relative path (relative to FCPATH) into an absolute local filesystem
+ * path for use in <img src> inside Dompdf-rendered views.
+ *
+ * Dompdf must never fetch images over HTTP from this server (deadlock risk on
+ * single-worker dev setups) — always pass local paths resolved by this helper.
+ *
+ * @param string $relativePath e.g. 'assets/uploads/survey/foto.jpg'
+ * @return string|null Absolute path if the file exists, null otherwise
+ */
+function pdf_local_image(string $relativePath): ?string
+{
+    if ($relativePath === '') {
+        return null;
+    }
+
+    $path = FCPATH . ltrim(str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $relativePath), DIRECTORY_SEPARATOR);
+    $real = realpath($path);
+
+    if ($real === false || stripos($real, realpath(FCPATH)) !== 0) {
+        return null;
+    }
+
+    return is_file($real) ? $real : null;
 }
