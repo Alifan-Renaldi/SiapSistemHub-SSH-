@@ -175,14 +175,16 @@ if (!file_exists(FCPATH . $loading_logo)) {
                      <tr>
                         <th class="w-1">No</th>
                         <th>Nomor BAP</th>
-                        <th>Tanggal BAP</th>
-                        <th>Tanggal Input BAP</th>
+                        <th>Tanggal Muat</th>
                         <th>Tanggal Kejadian</th>
+                        <th>Tanggal Input BAP</th>
+                        <th>Tanggal Selesai BAP</th>
                         <th>Nama Supir</th>
                         <th>Mobil</th>
                         <th>Jenis Muatan</th>
                         <th>Jenis Kasus</th>
                         <th>Realisasi Klaim</th>
+                        <th>Status BAP</th>
                         <th>Action</th>
                      </tr>
                   </thead>
@@ -194,14 +196,20 @@ if (!file_exists(FCPATH . $loading_logo)) {
                      <tr>
                         <td><?= esc($count); $count++; ?></td>
                         <td><?= esc($baplist_driversdata['b_code']); ?></td>
-                        <td><?= esc(date('d-m-Y', strtotime($baplist_driversdata['b_tanggal']))); ?></td>
-                        <td> <?= esc(date('d-m-Y', strtotime($baplist_driversdata['b_created_date']))); ?></td>
+                        <td><?= esc(date('d-m-Y', strtotime($baplist_driversdata['b_tanggal_muat']))); ?></td>
                         <td><?= esc(date('d-m-Y', strtotime($baplist_driversdata['b_tanggal_kejadian']))); ?></td>
+                        <td> <?= esc(date('d-m-Y', strtotime($baplist_driversdata['b_created_date']))); ?></td>
+                        <td><?= esc(date('d-m-Y', strtotime($baplist_driversdata['b_tanggal']))); ?></td>
                         <td><?= esc($baplist_driversdata['b_supir']); ?></td>
                         <td><?= esc($baplist_driversdata['b_nopol']); ?></td>
                         <td><?= esc($baplist_driversdata['b_muatan']); ?></td>
                         <td><?= esc($baplist_driversdata['b_jenis_kasus']); ?></td>
                         <td><?= esc($baplist_driversdata['b_realisasi_klaim']); ?></td>
+                        <td>
+                            <?php if($baplist_driversdata['b_is_status'] == 0): ?>
+                                <span class="badge badge-success">Done</span>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <?php 
                             $status = 'Inactive';

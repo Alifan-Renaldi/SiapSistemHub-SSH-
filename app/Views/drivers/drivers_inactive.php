@@ -180,12 +180,12 @@ if (!file_exists(FCPATH . $loading_logo)) {
                             <?php endif; ?>
                             <td>
                                 <?= 
-                                    esc($driverslists['d_doj'])
+                                    esc(date('d-m-Y', strtotime($driverslists['d_doj'])));
                                 ?>
                             </td>
                             <td>
                                 <?= 
-                                    esc($driverslists['d_resigndate'])
+                                    esc(date('d-m-Y',strtotime($driverslists['d_resigndate'])));
                                 ?>
                             </td>
                             <td>

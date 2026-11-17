@@ -27,15 +27,14 @@ class Drivers extends BaseController
 
     public function index()
     {
-
         $driverslist = $this->driversModel->getall_drivers();
-        $inactive_drivers = array_filter($driverslist, function($driver) {
+        $active_drivers = array_filter($driverslist, function($driver) {
             return $driver['d_is_active'] == '1' || $driver['d_is_active'] == '3';
         });
         $data['loanlist_drivers'] = $this->driversModel->get_loan();
         $data['baplist_drivers'] = $this->driversModel->getBap();
         $data['provinces'] = $this->driversModel->getProvinces();
-        $data['driverslist'] = $inactive_drivers;
+        $data['driverslist'] = $active_drivers;
         return view('drivers/drivers_management', $data);
 
     }
@@ -307,6 +306,26 @@ class Drivers extends BaseController
             return redirect()->to('/pagenotfound')->with('error', 'ID Driver tidak ditemukan');
         }
 
+        return $this->buildDriverViewData($d_id);
+    }
+
+    public function viewdriverByNis($d_nis = null)
+    {
+        if (empty($d_nis)) {
+            return redirect()->to('/pagenotfound')->with('error', 'NIS Driver tidak ditemukan');
+        }
+
+        $drivers = $this->driversModel->get_driver_by_nis($d_nis);
+
+        if (empty($drivers) || empty($drivers[0]['d_id'])) {
+            return view('pagenotfound');
+        }
+
+        return $this->buildDriverViewData($drivers[0]['d_id']);
+    }
+
+    private function buildDriverViewData($d_id)
+    {
         $driver = $this->driversModel->get_driverdetails($d_id);
 
         if (!empty($driver) && isset($driver['d_id'])) {
@@ -1029,7 +1048,7 @@ class Drivers extends BaseController
 
             $data = $this->request->getPost();
 
-            $dateFieldsToConvert = ['b_tanggal_kejadian', 'b_tanggal'];
+            $dateFieldsToConvert = ['b_tanggal_muat', 'b_tanggal_kejadian', 'b_tanggal'];
             foreach ($dateFieldsToConvert as $field) {
                 if (!empty($data[$field])) {
                     if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $data[$field])) {
@@ -1064,6 +1083,14 @@ class Drivers extends BaseController
             $data['b_is_status'] = 1;
             $data['b_status_korban'] = '';
             $data['b_pdf'] = '';
+            
+            $dateMuat = ['b_tanggal_muat'];
+            foreach ($dateMuat as $muat) {
+                if (!isset($data[$muat]) || trim($data[$muat]) == '') {
+                    $data[$muat] = null;
+                }
+            }    
+
             $dateFields = ['b_tanggal'];
             foreach ($dateFields as $field) {
                 if (!isset($data[$field]) || trim($data[$field]) == '') {
@@ -1074,7 +1101,7 @@ class Drivers extends BaseController
             $response = $this->driversModel->add_bap($data);
             if ($response) {
                 $bap_id = $this->driversModel->insertID();
-                return redirect()->to('drivers/printbap/' . $bap_id . '?new=true');
+                return redirect()->to('baps/bap_print/' . $bap_id . '?new=true');
             }
         } else {
             $errormsg = $validation->getErrors() ? implode('<br>', $validation->getErrors()) : '';
@@ -1109,7 +1136,7 @@ class Drivers extends BaseController
     {
         $data = $this->request->getPost();
 
-        $dateFieldsToConvert = ['b_tanggal_kejadian', 'b_tanggal'];
+        $dateFieldsToConvert = ['b_tanggal_muat' ,'b_tanggal_kejadian', 'b_tanggal'];
             foreach ($dateFieldsToConvert as $field) {
                 if (!empty($data[$field])) {
                     if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $data[$field])) {
@@ -1216,74 +1243,89 @@ class Drivers extends BaseController
         return view('baps/bap_pendingedit', $data);
     }
 
-    public function updatebap_pending() 
-    {
-        $data = $this->request->getPost();
+        public function updatebap_pending() 
+        {
+            $data = $this->request->getPost();
 
-        $dateFieldsToConvert = ['b_tanggal_kejadian', 'b_tanggal'];
-            foreach ($dateFieldsToConvert as $field) {
-                if (!empty($data[$field])) {
-                    if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $data[$field])) {
-                        $dateObj = \DateTime::createFromFormat('d-m-Y', $data[$field]);
-                        if ($dateObj) {
-                            $data[$field] = $dateObj->format('Y-m-d');
-                        }
-                    }
+        $dateFieldsToConvert = ['b_tanggal_muat', 'b_tanggal_kejadian', 'b_tanggal'];
+        foreach ($dateFieldsToConvert as $field) {
+            $value = $data[$field] ?? null;
+
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if ($value === null || $value === '' || $value === '0000-00-00' || $value === '1000-01-01') {
+                $data[$field] = null;
+                continue;
+            }
+
+            if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $value)) {
+                $dateObj = \DateTime::createFromFormat('d-m-Y', $value);
+                if ($dateObj) {
+                    $value = $dateObj->format('Y-m-d');
                 }
             }
 
-        $data['b_created_by'] = session('user_id');
-        if (!$data) {
-        session()->setFlashdata('warningmessage', 'No data submitted.');
-        return redirect()->to('drivers');
+            $data[$field] = $value;
         }
 
-        $driverName = $data['b_supir'] ?? '';
-        $bapNumber = $data['b_code'] ?? '';
-        $oldDocument = $data['existing_document'] ?? null;
-        $oldPdf = $data['existing_pdf'] ?? null;
+        $b_tanggal = $data['b_tanggal'] ?? null;
 
-            $photo = $this->upload_documentbap($driverName, $bapNumber, $oldDocument);
-            if ($photo === false) {
-                session()->setFlashdata('warningmessage', 'Gagal mengunggah dokumen. Format harus JPG/JPEG/PNG/PDF dan ukuran maksimal 5MB.');
-                return redirect()->to('baps/editbap_pending/' . $data['b_id']);
+            $data['b_created_by'] = session('user_id');
+            if (!$data) {
+            session()->setFlashdata('warningmessage', 'No data submitted.');
+            return redirect()->to('drivers');
             }
 
-            $pdf_document = $this->upload_pdfbap($driverName, $bapNumber, $oldPdf);
-            if ($pdf_document === null && !empty($_FILES['b_pdf']['name'])) {
-                session()->setFlashdata('warningmessage', 'Gagal mengunggah PDF. Format harus PDF dan ukuran maksimal 5MB.');
-                return redirect()->to('baps/editbap_pending/' . $data['b_id']);
-            }
+            $driverName = $data['b_supir'] ?? '';
+            $bapNumber = $data['b_code'] ?? '';
+            $oldDocument = $data['existing_document'] ?? null;
+            $oldPdf = $data['existing_pdf'] ?? null;
 
-            if ($photo) {
-                $data['b_document'] = $photo;
-            } else {
-                $data['b_document'] = $oldDocument ?? null;
-            }
+                $photo = $this->upload_documentbap($driverName, $bapNumber, $oldDocument);
+                if ($photo === false) {
+                    session()->setFlashdata('warningmessage', 'Gagal mengunggah dokumen. Format harus JPG/JPEG/PNG/PDF dan ukuran maksimal 5MB.');
+                    return redirect()->to('baps/editbap_pending/' . $data['b_id']);
+                }
 
-            $data['b_pdf'] = $pdf_document ?? $oldPdf ?? null;
-        
-            $b_tanggal = $data['b_tanggal'] ?? '';
-            if (!empty($b_tanggal) && $b_tanggal !== null) {
-                $data['b_is_status'] = 0;
-            } else {
-                unset($data['b_is_status']);
-            }
+                $pdf_document = $this->upload_pdfbap($driverName, $bapNumber, $oldPdf);
+                if ($pdf_document === null && !empty($_FILES['b_pdf']['name'])) {
+                    session()->setFlashdata('warningmessage', 'Gagal mengunggah PDF. Format harus PDF dan ukuran maksimal 5MB.');
+                    return redirect()->to('baps/editbap_pending/' . $data['b_id']);
+                }
 
-        unset($data['existing_document'], $data['existing_pdf']);
+                if ($photo) {
+                    $data['b_document'] = $photo;
+                } else {
+                    $data['b_document'] = $oldDocument ?? null;
+                }
 
-        $response = $this->driversModel->editpending_bap($data);
-        if ($response) {
-            session()->setFlashdata('successmessage', 'BAP updated successfully.');
-            if (!empty($b_tanggal) && $b_tanggal != null) {
+                $data['b_pdf'] = $pdf_document ?? $oldPdf ?? null;
+            
+                if ($b_tanggal === null) {
+                    $data['b_is_status'] = 1;
+                } else {
+                    $data['b_is_status'] = 0; 
+                }
+
+                $b_status = $data['b_is_status'];
+            unset($data['existing_document'], $data['existing_pdf']);
+
+            $response = $this->driversModel->editpending_bap($data);
+            if ($response) {
+                session()->setFlashdata('successmessage', 'BAP updated successfully.');
+
+                if ($b_tanggal === null && $b_status === 1) {
+                    return redirect()->to('baps/bap_pending');
+                }
+
                 return redirect()->to('baps/bap_management');
             }
-            return redirect()->to('baps/bap_pending');
-        } else {
+
             session()->setFlashdata('warningmessage', 'Something went wrong. Try again.');
             return redirect()->to('baps/editbap_pending/' . $data['b_id']);
         }
-    }
 
     public function bappending_delete()
     {
@@ -1910,10 +1952,11 @@ class Drivers extends BaseController
             $data['tr_supir'] = implode(', ', $data['tr_supir']);
         }
 
+        $data['tr_created_by'] = session()->get('user_id');
         $data['tr_modified_date'] = date('Y-m-d H:i:s');
         $driverName = $data['tr_supir'] ?? '';
         $trainingNumber = $data['tr_code'] ?? '';
-        $oldPdf = $data['existing_pdf'] ?? null;
+        $oldPdf = $data['existing_pdf'] ?? '';
 
         $pdf_document = $this->upload_modultraining($driverName, $trainingNumber, $oldPdf);
             if ($pdf_document === false) {
@@ -1921,19 +1964,23 @@ class Drivers extends BaseController
                 return redirect()->to('trainings/training_management');
             }
 
-            
-        $training_id = $data['tr_id'];
         $data['tr_document'] = $pdf_document ?: $oldPdf;
-        unset($data['tr_id']);
-        unset($data['csrf_token']);
         unset($data['existing_pdf']);
         
+        $training_id = $data['tr_id'];
+        unset($data['tr_id']);
+        unset($data['csrf_token']);
+        
         $update_training = $this->driversModel->edit_training($training_id, $data);
-        if ($update_training) {
-            return redirect()->to('trainings/training_management')->with('successmessage', 'Training updated successfully.');
-        } else {
-            return redirect()->to('trainings/training_management')->with('warningmessage', 'Something went wrong. Try again.');
+        if($update_training){
+            if ($update_training) {
+                return redirect()->to('trainings/training_management')->with('successmessage', 'Survey updated successfully.');
+            } else {
+                return redirect()->to('surveys/editsurvey/' . $survey_id)->with('warningmessage', 'Something went wrong. Try again.');
+            }
         }
+
+        return redirect()-to('trainings/training_management');
     }
 
     public function training_delete($tr_id = null)
@@ -2093,11 +2140,21 @@ class Drivers extends BaseController
                 ];
             }
 
+            $totalSupir = null;
+            foreach ($trainings as $training) {
+                if (!empty($training['tr_supir'])) {
+                    $total = array_filter(array_map('trim', explode(',', $training['tr_supir'])));
+                    $totalSupir += count($total);
+                }
+            }
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Data berhasil dimuat',
                 'data' => $formattedData,
-                'total' => count($formattedData),
+                'total' => $totalSupir,
+                'total_trainings' => count($formattedData),
+
                 'tema_name' => htmlspecialchars($temaName, ENT_QUOTES, 'UTF-8'),
             ]);
 

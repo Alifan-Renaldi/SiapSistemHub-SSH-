@@ -12,13 +12,32 @@ class VehicleModel extends Model
     protected $table = 'vehicles';
     protected $primaryKey = 'v_id';
     protected $allowedFields = [
-        'v_registration_no', 'v_type', 'v_name', 'v_group', 'v_owner', 'v_reg_exp_date', 'v_is_active', 'v_stnk_expdate', 'v_plat_expdate',
+        'v_registration_no', 'v_type', 'v_name', 'v_group', 'v_owner', 'v_reg_exp_date', 'v_is_active', 'v_jenis_mobil', 'v_stnk_expdate', 'v_plat_expdate',
         'v_kir_expdate', 'v_kir_process_date', 'v_legal', 'v_chassis_no', 'v_engine_no', 'v_uji_no', 'v_lokasi_kir', 'v_notes_lokasikir', 'v_insurance', 'v_polis_no', 'v_exp_insurance', 'v_notes', 'v_created_by', 'v_created_date', 'v_modified_date', 'v_qr_code_path', 'v_qr_code_filename'
     ];
 
     public function getall_vehicle()
     {
         return $this->orderBy('v_id', 'DESC')->findAll();
+    }
+
+    public function get_active_vehicle_by_jenis(int $jenis)
+    {
+        return $this->db->table('vehicles')
+                    ->where('v_is_active', 1)
+                    ->where('v_jenis_mobil', $jenis)
+                    ->orderBy('v_id', 'DESC')
+                    ->get()
+                    ->getResultArray();
+    }
+    public function get_inactive_vehicle_by_jenis(int $jenis)
+    {
+        return $this->db->table('vehicles')
+                    ->where('v_is_active', 0)
+                    ->where('v_jenis_mobil', $jenis)
+                    ->orderBy('v_id', 'DESC')
+                    ->get()
+                    ->getResultArray();
     }
 
     public function get_vehicledetails($v_id)

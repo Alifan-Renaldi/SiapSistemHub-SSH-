@@ -17,6 +17,10 @@ class DashboardModel
         $data['tot_vehicles'] = $this->db->table('vehicles')->countAll();
         $data['tot_vehicles_active'] = $this->db->table('vehicles')->where('v_is_active', '1')->countAllResults();
         $data['tot_vehicles_inactive'] = $this->db->table('vehicles')->where('v_is_active', '0')->countAllResults();
+        $data['tot_vehicles_active_besar'] = $this->db->table('vehicles')->where('v_is_active', '1')->where('v_jenis_mobil', '0')->countAllResults();
+        $data['tot_vehicles_active_kecil'] = $this->db->table('vehicles')->where('v_is_active', '1')->where('v_jenis_mobil', '1')->countAllResults();
+        $data['tot_vehicles_inactive_besar'] = $this->db->table('vehicles')->where('v_is_active', '0')->where('v_jenis_mobil', '0')->countAllResults();
+        $data['tot_vehicles_inactive_kecil'] = $this->db->table('vehicles')->where('v_is_active', '0')->where('v_jenis_mobil', '1')->countAllResults();
         $data['tot_drivers'] = $this->db->table('drivers')->countAll();
         $data['tot_inventorys'] = $this->db->table('inventorys')->countAll();
         $data['tot_drivers_active'] = $this->db->table('drivers')->where('d_is_active', '1')->countAllResults();
@@ -38,6 +42,19 @@ class DashboardModel
             ->get()->getRow()->ie_amount ?? 0;
 
         return $data;
+    }
+
+    /**
+     * Hitung jumlah supir per status untuk pie chart "Status Supir".
+     * Aktif = status 1 (Active) + 3 (Permission), Inactive = 0, Blacklist = 2.
+     */
+    public function getDriverStatusCounts()
+    {
+        return [
+            'active'    => $this->db->table('drivers')->whereIn('d_is_active', ['1', '3'])->countAllResults(),
+            'inactive'  => $this->db->table('drivers')->where('d_is_active', '0')->countAllResults(),
+            'blacklist' => $this->db->table('drivers')->where('d_is_active', '2')->countAllResults(),
+        ];
     }
 
     public function get_driverdetails($d_id)

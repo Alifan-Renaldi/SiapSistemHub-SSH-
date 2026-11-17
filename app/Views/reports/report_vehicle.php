@@ -9,6 +9,10 @@ if (!file_exists(FCPATH . $loading_logo)) {
 ?>
 
 <style>
+        /* Vehicle report table: enforce per-column widths */
+        #tblVehicleReport { table-layout: fixed; }
+        #tblVehicleReport td { word-wrap: break-word; }
+
         /* Premium Loading Screen Overlay CSS */
         .loading-overlay {
             position: fixed;
@@ -272,25 +276,25 @@ if (!file_exists(FCPATH . $loading_logo)) {
         </div>
             <?php if(!empty($vehicle)){ 
              ?>
-                   <table  class="datatableexportvehicle table card-table">
+                   <table id="tblVehicleReport" class="table card-table">
                       <thead>
                         <tr>
-                          <th class="w-1">No</th>
-                          <th>Nomor Polisi</th>
-                          <th>Pemilik</th>
-                          <th>Jenis Mobil</th>
+                          <th data-width="40px">No</th>
+                          <th data-width="110px">Nomor Polisi</th>
+                          <th data-width="150px">Pemilik</th>
+                          <th data-width="130px">Jenis Mobil</th>
                           <?php if (function_exists('userpermission') && userpermission('lr_vech_detail_num')) : ?>
-                          <th>Nomor Rangka</th>
-                          <th>Nomor Mesin</th>
-                          <th>Nomor Uji</th>
+                          <th data-width="140px">Nomor Rangka</th>
+                          <th data-width="130px">Nomor Mesin</th>
+                          <th data-width="120px">Nomor Uji</th>
                           <?php endif; ?>
-                          <th>JT Pajak</th>
-                          <th>JT Plat</th>
-                          <th>JT KIR</th>
-                          <th>Proses KIR</th>
-                          <th>Lokasi KIR</th>
-                          <th>Catatan KIR</th>
-                          <th>Status Mobil</th>
+                          <th data-width="120px">JT Pajak</th>
+                          <th data-width="120px">JT Plat</th>
+                          <th data-width="120px">JT KIR</th>
+                          <th data-width="110px">Proses KIR</th>
+                          <th data-width="160px">Lokasi KIR</th>
+                          <th data-width="220px">Catatan KIR</th>
+                          <th data-width="100px">Status Mobil</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -420,40 +424,23 @@ if (!file_exists(FCPATH . $loading_logo)) {
 $(document).ready(function() {
     function initDatepicker(element) {
         element.datepicker({
-            format: 'dd/mm/yyyy',
+            format: 'dd-mm-yyyy',
             autoclose: true,
             todayHighlight: true
         });
     }
 
     function handleVehicleSelection() {
-        var selectedSTNK = $('#vehicle_name').val();
-        var fromDate = $('#vehicle_from');
-        var toDate = $('#vehicle_to');
-        
-        if (selectedSTNK === 'all') {
-            fromDate.prop('readonly', true).val('').datepicker('destroy');
-            toDate.prop('readonly', true).val('').datepicker('destroy');
-            fromDate.removeAttr('required');
-            toDate.removeAttr('required');
-            
-            fromDate.removeClass('datepicker').attr('type', 'text');
-            toDate.removeClass('datepicker').attr('type', 'text');
-        } else {
-            fromDate.prop('readonly', false);
-            toDate.prop('readonly', false);
-            fromDate.removeAttr('required');
-            toDate.removeAttr('required');
-            
-            if (!fromDate.hasClass('hasDatepicker')) {
-                fromDate.addClass('datepicker');
-                initDatepicker(fromDate);
+        $('#vehicle_from, #vehicle_to').each(function() {
+            var dateInput = $(this);
+
+            dateInput.prop('readonly', false).removeAttr('required');
+
+            if (!dateInput.hasClass('hasDatepicker')) {
+                dateInput.addClass('datepicker');
+                initDatepicker(dateInput);
             }
-            if (!toDate.hasClass('hasDatepicker')) {
-                toDate.addClass('datepicker');
-                initDatepicker(toDate);
-            }
-        }
+        });
     }
 
     function toggleActionButtons(show) {
@@ -465,7 +452,7 @@ $(document).ready(function() {
     }
 
     function checkAndShowExportButtons() {
-        const $tbody = $('.datatableexportvehicle tbody');
+        const $tbody = $('#tblVehicleReport tbody');
         const hasData = $tbody.children('tr').length > 0 && !$tbody.find('tr td[colspan]').length;
         if (hasData) {
             $('#exportButtons').show();
@@ -474,6 +461,33 @@ $(document).ready(function() {
         }
     }
     checkAndShowExportButtons();
+
+    if ($('#tblVehicleReport').length) {
+        var columnDefs = [];
+        $('#tblVehicleReport thead th').each(function(i) {
+            var w = $(this).data('width');
+            if (w) {
+                columnDefs.push({ targets: i, width: w });
+            }
+        });
+
+        $('#tblVehicleReport').DataTable({
+            "pageLength": 10,
+            "bInfo": false,
+            "ordering": false,
+            "searching": false,
+            "scrollX": true,
+            "autoWidth": false,
+            "columnDefs": columnDefs,
+            dom: 'Bfrtip',
+            buttons: [
+                'copyHtml5',
+                'excelHtml5',
+                'csvHtml5',
+                'pdfHtml5'
+            ]
+        });
+    }
 
     $('.select2-multiple').select2({
         placeholder: "Select Owners",
@@ -493,12 +507,12 @@ $(document).ready(function() {
     $('#location_kir').val('');
     $('#report_type').val('all').trigger('change');
     
-    if ($.fn.DataTable.isDataTable('.datatableexportvehicle')) {
-        $('.datatableexportvehicle').DataTable().destroy();
+    if ($.fn.DataTable.isDataTable('#tblVehicleReport')) {
+        $('#tblVehicleReport').DataTable().destroy();
     }
-    
-    $('.datatableexportvehicle tbody').empty();
-    $('.datatableexportvehicle').hide();
+
+    $('#tblVehicleReport tbody').empty();
+    $('#tblVehicleReport').hide();
     $('#dataCount').text('0');
     toggleActionButtons(false);
     handleVehicleSelection();
@@ -565,7 +579,7 @@ $('#printReport').click(function() {
         return hours + ':' + minutes;
     }
 
-    var table = $('.datatableexportvehicle').DataTable();
+    var table = $('#tblVehicleReport').DataTable();
     var originalPageLength = table.page.len();
     table.page.len(-1).draw();
     
@@ -582,7 +596,7 @@ $('#printReport').click(function() {
         'border-collapse': 'collapse'
     });
     
-    printTable.append($('.datatableexportvehicle thead').clone());
+    printTable.append($('#tblVehicleReport thead').clone());
     
     var tbody = $('<tbody>');
     table.rows({ search: 'applied' }).nodes().each(function(row) {

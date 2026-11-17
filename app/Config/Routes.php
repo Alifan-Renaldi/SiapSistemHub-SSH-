@@ -30,6 +30,7 @@ $routes->get('/drivers/drivers_management', 'Drivers::index');
 $routes->match(['get', 'post'], 'drivers/adddrivers', 'Drivers::adddrivers');
 $routes->match(['get', 'post'], 'drivers/editdriver', 'Drivers::editdriver');
 $routes->post('drivers/viewdriver', 'Drivers::viewdriver');
+$routes->get('drivers/viewdriver_by_nis/(:any)', 'Drivers::viewdriverByNis/$1');
 $routes->post('drivers/drivers_delete/(:num)', 'Drivers::drivers_delete/$1');
 $routes->post('drivers/insertdriver', 'Drivers::insertdriver');
 $routes->post('drivers/updatedriver', 'Drivers::updatedriver');
@@ -55,11 +56,11 @@ $routes->post('baps/bap_view', 'Drivers::viewbap');
 $routes->post('drivers/insertbap', 'Drivers::insertbap');
 $routes->post('drivers/updatebap', 'Drivers::updatebap');
 $routes->post('drivers/bap_delete/(:num)', 'Drivers::bap_delete/$1');
-$routes->match(['get', 'post'], 'baps/editbap_pending/(:num)', 'Drivers::editbap_pending/$1');
+$routes->match(['get', 'post'], 'baps/editbap_pending', 'Drivers::editbap_pending');
 $routes->post('baps/bap_pendingview', 'Drivers::viewbappending');
 $routes->post('drivers/updatebap_pending', 'Drivers::updatebap_pending');
 $routes->post('drivers/bappending_delete/(:num)', 'Drivers::bappending_delete/$1');
-$routes->get('drivers/printbap/(:num)', 'Drivers::printbap/$1');
+// $routes->get('drivers/printbap/(:num)', 'Drivers::printbap/$1');
 $routes->get('baps/bap_print/(:num)', 'Drivers::printbap/$1');
 
 //survey
@@ -100,7 +101,8 @@ $routes->get('loans/loan_approve', 'Drivers::loanlist_approve');
 $routes->post('loans/update_loan_status', 'Drivers::update_loan_status');
 
 //vehicle management
-$routes->get('/vehicles/vehicles_management', 'Vehicle::index');
+$routes->get('/vehicles/vehicles_management', 'Vehicle::active_vehicle_besar');
+$routes->get('/vehicles/vehicles_management_kecil', 'Vehicle::active_vehicle_kecil');
 $routes->match(['get', 'post'], 'vehicles/vehiclegroup', 'Vehicle::vehiclegroup');
 $routes->match(['get', 'post'], 'vehicle/addgroup', 'Vehicle::addgroup');
 $routes->match(['get', 'post'], 'vehicles/vehicleowner', 'Vehicle::vehicleowner');
@@ -119,6 +121,10 @@ $routes->get('vehicles/generate_qrcode_with_label/(:num)', 'Vehicle::generate_qr
 $routes->get('vehicles/print_qrcode/(:num)', 'Vehicle::print_qrcode/$1');
 $routes->post('vehicles/generate_qrcode_preview', 'Vehicle::generate_qrcode_preview');
 $routes->get('vehicles/generate_qrcode_preview', 'Vehicle::generate_qrcode_preview');
+
+//vehicle_inactive
+$routes->get('/vehicles/vehicles_management_inactive', 'Vehicle::inactive_vehicle_besar');
+$routes->get('/vehicles/vehicles_management_inactive_kecil', 'Vehicle::inactive_vehicle_kecil');
 
 //inventory
 $routes->get('inventory/inventory_management', 'Vehicle::inventorylist_vehicle');
@@ -158,11 +164,34 @@ $routes->get('handover/handover_print/(:num)', 'Vehicle::printhandover/$1');
 $routes->post('handover/save_signature', 'Vehicle::save_signature');
 $routes->get('handover/handover_download_pdf/(:num)', 'Vehicle::downloadHandoverPdf/$1');
 
+//mechanics
+$routes->get('mechanics/incentive_management', 'Workshops::incentive_list');
+$routes->match(['get', 'post'], 'mechanics/addincentive', 'Workshops::addincentive');
+$routes->match(['get', 'post'], 'mechanics/editincentive', 'Vehicle::editincentive');
+$routes->post('mechanics/viewincentive', 'Workshops::viewincentive');
+$routes->post('mechanics/insertincentive', 'Workshops::insertincentive');
+$routes->post('mechanics/updateincentive', 'Workshops::updateincentive');
+$routes->post('mechanics/incentive_delete/(:num)', 'Vehicle::incentive_delete/$1');
+
+//jobdesc
+$routes->get('jobdesc/kpi_management', 'Jobdescs::kpi_list');
+$routes->get('jobdesc/kpi_nilai_management', 'Jobdescs::kpi_nilai_list');
+$routes->match(['get', 'post'], 'jobdesc/add_indikator', 'Jobdescs::add_indikator');
+$routes->post('jobdesc/insert_indikator', 'Jobdescs::insert_indikator');
+$routes->get('jobdesc/add_nilai/(:num)', 'Jobdescs::add_nilai/$1');
+$routes->post('jobdesc/insert_nilai', 'Jobdescs::insert_nilai');
+$routes->get('jobdesc/edit_indikator/(:num)', 'Jobdescs::edit_indikator/$1');
+$routes->post('jobdesc/update_indikator', 'Jobdescs::update_indikator');
+$routes->get('jobdesc/view_kpi/(:num)', 'Jobdescs::view_kpi/$1');
+$routes->get('jobdesc/view_kpi_nilai/(:num)', 'Jobdescs::view_kpi_nilai/$1');
+$routes->post('jobdesc/kpi_delete/(:num)', 'Jobdescs::kpi_delete/$1');
+
 //report
 $routes->match(['get', 'post'], 'reports/driver', 'Reports::driver');
 $routes->match(['get', 'post'], 'reports/export_driver_excel', 'Reports::export_driver_excel');
 $routes->match(['get', 'post'], 'reports/export_driver_pdf', 'Reports::export_driver_pdf');
-$routes->match(['get', 'post'], 'reports/bap', 'Reports::bap');
+$routes->match(['get', 'post'], 'reports/reportBap/bap', 'Reports::bap');
+$routes->match(['get', 'post'], 'reports/reportBap/bap_summary', 'Reports::bap_summary');
 $routes->match(['get', 'post'], 'reports/export_bap_excel', 'Reports::export_bap_excel');
 $routes->match(['get', 'post'], 'reports/export_bap_pdf', 'Reports::export_bap_pdf');
 $routes->match(['get', 'post'], 'reports/laka', 'Reports::laka');
@@ -186,15 +215,11 @@ $routes->match(['get', 'post'], 'reports/export_inventory_pdf', 'Reports::export
 $routes->match(['get', 'post'], 'reports/handover', 'Reports::handover');
 $routes->match(['get', 'post'], 'reports/export_handover_excel', 'Reports::export_handover_excel');
 $routes->match(['get', 'post'], 'reports/export_handover_pdf', 'Reports::export_handover_pdf');
+$routes->match(['get', 'post'], 'reports/jobdesc', 'Reports::jobdesc');
+$routes->get('reports/get_karyawan_by_divisi', 'Reports::get_karyawan_by_divisi');
+$routes->match(['get', 'post'], 'reports/export_jobdesc_excel', 'Reports::export_jobdesc_excel');
+$routes->match(['get', 'post'], 'reports/export_jobdesc_pdf', 'Reports::export_jobdesc_pdf');
 
-//mechanics
-$routes->get('mechanics/incentive_management', 'Workshops::incentive_list');
-$routes->match(['get', 'post'], 'mechanics/addincentive', 'Workshops::addincentive');
-$routes->match(['get', 'post'], 'mechanics/editincentive', 'Vehicle::editincentive');
-$routes->post('mechanics/viewincentive', 'Workshops::viewincentive');
-$routes->post('mechanics/insertincentive', 'Workshops::insertincentive');
-$routes->post('mechanics/updateincentive', 'Workshops::updateincentive');
-$routes->post('mechanics/incentive_delete/(:num)', 'Vehicle::incentive_delete/$1');
 
 $routes->get('form_information', 'Development::index');
 

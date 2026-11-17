@@ -30,14 +30,44 @@ class Vehicle extends BaseController
         helper(['form', 'url', 'string', 'text', 'custom']);
     }
 
-    public function index()
+    public function active_vehicle_besar()
     {
         $data = [
-            'vehiclelist' => $this->vehicleModel->getall_vehicle(),
             'v_group' => $this->vehicleModel->get_vehiclegroup(),
-            'v_owner' => $this->vehicleModel->get_vehicleowner()
+            'v_owner' => $this->vehicleModel->get_vehicleowner(),
+            'vehiclelist' => $this->vehicleModel->get_active_vehicle_by_jenis(0),
         ];
         return view('vehicles/vehicles_management', $data);
+    }
+
+    public function active_vehicle_kecil()
+    {
+        $data = [
+            'v_group' => $this->vehicleModel->get_vehiclegroup(),
+            'v_owner' => $this->vehicleModel->get_vehicleowner(),
+            'vehiclelist' => $this->vehicleModel->get_active_vehicle_by_jenis(1),
+        ];
+        return view('vehicles/vehicle_management_kecil', $data);
+    }
+
+    public function inactive_vehicle_besar()
+    {
+        $data = [
+            'v_group' => $this->vehicleModel->get_vehiclegroup(),
+            'v_owner' => $this->vehicleModel->get_vehicleowner(),
+            'vehiclelist' => $this->vehicleModel->get_inactive_vehicle_by_jenis(0),
+        ];
+        return view('vehicles/vehicles_management_inactive', $data);
+    }
+
+    public function inactive_vehicle_kecil()
+    {
+        $data = [
+            'v_group' => $this->vehicleModel->get_vehiclegroup(),
+            'v_owner' => $this->vehicleModel->get_vehicleowner(),
+            'vehiclelist' => $this->vehicleModel->get_inactive_vehicle_by_jenis(1),
+        ];
+        return view('vehicles/vehicles_management_inactive_kecil', $data);
     }
 
     private function generateAndSaveQrCode(int $vehicleId, string $qrData): void

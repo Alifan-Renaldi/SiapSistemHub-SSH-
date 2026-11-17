@@ -433,6 +433,13 @@
                       </div>
                       <div class="form-group mr-4">
                         <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_vech_list_inactive]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_vech_list_inactive']) && $user['lr_vech_list_inactive'] == 1) ? 'checked' : '' ?> name="permissions[lr_vech_list_inactive]" class="custom-control-input" id="lr_vech_list_inactive">
+                          <label class="custom-control-label" for="lr_vech_list_inactive">Inactive List</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
                           <input type="hidden" name="permissions[lr_vech_add]" value="0">
                           <input type="checkbox" value="1" <?= (isset($user['lr_vech_add']) && $user['lr_vech_add'] == 1) ? 'checked' : '' ?> name="permissions[lr_vech_add]" class="custom-control-input" id="lr_vech_add">
                           <label class="custom-control-label" for="lr_vech_add">Add</label>
@@ -694,6 +701,63 @@
                           <input type="hidden" name="permissions[lr_vech_invent_print]" value="0">
                           <input type="checkbox" value="1" <?= (isset($user['lr_vech_invent_print']) && $user['lr_vech_invent_print'] == 1) ? 'checked' : '' ?> name="permissions[lr_vech_invent_print]" class="custom-control-input" id="lr_vech_invent_print">
                           <label class="custom-control-label" for="lr_vech_invent_print">Print</label>
+                        </div>
+                      </div>
+                  </div>
+
+                  <div class="row">
+                      <div class="col-sm-6 col-md-2">
+                        <div class="form-group">
+                          <label class="form-label">Jobdesc KPI</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_list]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_list']) && $user['lr_kpi_list'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_list]" class="custom-control-input" id="lr_kpi_list">
+                          <label class="custom-control-label" for="lr_kpi_list">KPI List</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_pending_list]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_pending_list']) && $user['lr_kpi_pending_list'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_pending_list]" class="custom-control-input" id="lr_kpi_pending_list">
+                          <label class="custom-control-label" for="lr_kpi_pending_list">Pending List</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_add]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_add']) && $user['lr_kpi_add'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_add]" class="custom-control-input" id="lr_kpi_add">
+                          <label class="custom-control-label" for="lr_kpi_add">Add Indikator</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_add_nilai]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_add_nilai']) && $user['lr_kpi_add_nilai'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_add_nilai]" class="custom-control-input" id="lr_kpi_add_nilai">
+                          <label class="custom-control-label" for="lr_kpi_add_nilai">Add Nilai</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_edit]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_edit']) && $user['lr_kpi_edit'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_edit]" class="custom-control-input" id="lr_kpi_edit">
+                          <label class="custom-control-label" for="lr_kpi_edit">Edit</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_view]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_view']) && $user['lr_kpi_view'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_view]" class="custom-control-input" id="lr_kpi_view">
+                          <label class="custom-control-label" for="lr_kpi_view">View</label>
+                        </div>
+                      </div>
+                      <div class="form-group mr-4">
+                        <div class="custom-control custom-checkbox">
+                          <input type="hidden" name="permissions[lr_kpi_delete]" value="0">
+                          <input type="checkbox" value="1" <?= (isset($user['lr_kpi_delete']) && $user['lr_kpi_delete'] == 1) ? 'checked' : '' ?> name="permissions[lr_kpi_delete]" class="custom-control-input" id="lr_kpi_delete">
+                          <label class="custom-control-label" for="lr_kpi_delete">Delete</label>
                         </div>
                       </div>
                   </div>

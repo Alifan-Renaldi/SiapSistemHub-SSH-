@@ -16,21 +16,28 @@
          </div>
          <!-- /.col -->
          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
+            <ol class="breadcrumb float-sm-right mb-0">
                <li class="breadcrumb-item"><a href="<?= base_url('dashboard'); ?>">Dashboard</a></li>
                <li class="breadcrumb-item active">BAP Report</li>
+               <li class="breadcrumb-item">BAP Report Summary</li>
             </ol>
-         </div>
-         <!-- /.col -->
-      </div>
-      <!-- /.row -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <div class="d-flex justify-content-center mt-2">
+        <button class="btn btn-primary btn-sm">
+            <i class="fa fa-list-alt mr-1"></i>
+            <a href="<?= base_url('reports/reportBap/bap_summary') ?>">Summary Report</a>
+        </button>
+    </div>
+    <!-- /.row -->
    </div>
    <!-- /.container-fluid -->
 </div>
 <!-- Main content -->
 <section class="content">
    <div class="container-fluid">
-    <form method="post" id="bap_report" class="card basicvalidation" action="<?php echo base_url('reports/bap'); ?>">
+    <form method="post" id="bap_report" class="card basicvalidation" action="<?php echo base_url('reports/reportBap/bap'); ?>">
         <?= csrf_field() ?>
         
         <div class="card-body">
@@ -177,24 +184,23 @@
                    <table class="datatableexport table card-table">
                       <thead>
                         <tr>
-                          <th class="w-1">No</th>
+                          <th style="width: 10px;">No</th>
                           <th>No BAP</th>
-                          <th>Tanggal</th>
-                          <th>Tanggal BAP</th>
+                          <th>Tanggal Muat</th>
                           <th>Tanggal Kejadian</th>
+                          <th>Tanggal Dibuat BAP</th>
+                          <th>Tanggal Selesai BAP</th>
                           <th style="width: 100px;">Nama Supir</th>
                           <th style="width: 100px;">Mobil</th>
                           <th>Jenis Muatan</th>
-                          <th>Keberangkatan</th>
+                          <th>Tujuan</th>
                           <th>Lokasi Kejadian</th>
                           <th>Kronologi Kasus</th>
                           <th>Jenis Kasus</th>
+                          <th>Keterangan Klaim</th>
                           <th>Realisasi Klaim</th>
-                          <th>Potong Tagihan</th>
-                          <th>Cash</th>
-                          <th>Transfer</th>
-                          <th>Klasifikasi Kasus</th>
                           <th>Status Supir</th>
+                          <th>Status BAP</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -202,32 +208,42 @@
                            foreach($bap as $baps){
                            ?>
                         <tr>
-                        <td><?= $count; $count++; ?></td>
+                        <td style="width: 10px;"><?= $count; $count++; ?></td>
                         <td><?= esc($baps['b_code']); ?></td>
+                        <td><?= esc(date('d-m-Y', strtotime($baps['b_tanggal_muat']))); ?></td>
+                        <td><?= esc(date('d-m-Y', strtotime($baps['b_tanggal_kejadian']))); ?></td>
                         <td><?= esc(date('d-m-Y', strtotime($baps['b_created_date']))); ?></td>
                         <td>
                             <?php 
                                 $bap_date = $baps['b_tanggal'];
-                                if (empty($bap_date) || $bap_date == '0000-00-00' || $bap_date == '0000-00-00 00:00:00') {
-                                    echo '00-00-0000';
+                                if (empty($bap_date)) {
+                                    echo 'Belum Selesai di BAP ';
                                 } else {
                                     echo esc(date('d-m-Y', strtotime($bap_date)));
                                 }
                             ?>
                         </td>
-                        <td><?= esc(date('d-m-Y', strtotime($baps['b_tanggal_kejadian']))); ?></td>
                         <td><?= esc($baps['b_supir']); ?></td>
-                        <td><?= esc($baps['b_nopol']); ?></td>
+                        <td style="max-width: 2rem;width: 80%;"><?= esc($baps['b_nopol']); ?></td>
                         <td><?= esc($baps['b_muatan']); ?></td>
                         <td><?= esc($baps['b_keberangkatan']); ?></td>
                         <td><?= esc($baps['b_lokasi_kejadian']); ?></td>
                         <td><?= esc($baps['b_kondisi_barang']); ?></td>
                         <td><?= esc($baps['b_jenis_kasus']); ?></td>
-                        <td><?= esc($baps['b_realisasi_klaim']); ?></td>
-                        <td><?= esc($baps['b_potong_tagihan']); ?></td>
-                        <td><?= esc($baps['b_cash']); ?></td>
-                        <td><?= esc($baps['b_transfer']); ?></td>
-                        <td><?= esc($baps['b_klasifikasi']); ?></td>
+                        <td>
+                            <?php if ($baps['b_is_status'] == 1): ?>
+                                Belum Selesai di BAP
+                            <?php elseif ($baps['b_is_status'] == 0): ?>
+                                <?= esc($baps['b_potong_tagihan']) ?>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($baps['b_is_status'] == 1): ?>
+                                Belum Selesai di BAP
+                            <?php elseif ($baps['b_is_status'] == 0): ?>
+                                <?= esc($baps['b_realisasi_klaim']) ?>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <?php if ($baps['d_is_active'] == 1): ?>
                                 <span class="badge badge-success">Active</span>
@@ -237,6 +253,13 @@
                                 <span class="badge badge-dark">Blacklist</span>
                              <?php elseif ($baps['d_is_active'] == 3): ?>
                                 <span class="badge badge-warning">Permission</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if($baps['b_is_status'] == 1): ?>
+                                <span class="badge badge-warning">Pending</span>
+                            <?php elseif($baps['b_is_status'] == 0): ?>
+                                <span class="badge badge-success">Done</span>
                             <?php endif; ?>
                         </td>
                         </tr>
@@ -257,43 +280,26 @@
     const baseUrl = "<?= base_url() ?>"; 
     enableAutoLogout(7200, baseUrl + "login");
 
-    $(document).ready(function() {
-    function initDatepicker(element) {
-        element.datepicker({
-            format: 'yyyy/mm/dd',
-            autoclose: true,
-            todayHighlight: true
-        });
-    }
+        $(document).ready(function() {
+        function initDatepicker(element) {
+            element.datepicker({
+                format: 'dd-mm-yyyy',
+                autoclose: true,
+                todayHighlight: true
+            });
+        }
 
     function handleDriverSelection() {
-        var selectedBap = $('#bap_name').val();
-        var fromDate = $('#bap_from');
-        var toDate = $('#bap_to');
+         $('#bap_from, #bap_to').each(function() {
+            var dateInput = $(this);
 
-        if (selectedBap === 'all bap') {
-            fromDate.prop('readonly', true).val('').datepicker('destroy');
-            toDate.prop('readonly', true).val('').datepicker('destroy');
-            fromDate.removeAttr('required');
-            toDate.removeAttr('required');
+            dateInput.prop('readonly', false).removeAttr('required');
 
-            fromDate.removeClass('datepicker').attr('type', 'text');
-            toDate.removeClass('datepicker').attr('type', 'text');
-        } else {
-            fromDate.prop('readonly', false);
-            toDate.prop('readonly', false);
-            fromDate.removeAttr('required');
-            toDate.removeAttr('required');
-            
-            if (!fromDate.hasClass('hasDatepicker')) {
-                fromDate.addClass('datepicker');
-                initDatepicker(fromDate);
+            if (!dateInput.hasClass('hasDatepicker')) {
+                dateInput.addClass('datepicker');
+                initDatepicker(dateInput);
             }
-            if (!toDate.hasClass('hasDatepicker')) {
-                toDate.addClass('datepicker');
-                initDatepicker(toDate);
-            }
-        }
+        });
     }
 
     function toggleActionButtons(show) {

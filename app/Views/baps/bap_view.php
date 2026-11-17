@@ -255,8 +255,12 @@
                                                 <td><?= esc($bapdetails['b_code']) ?></td>
                                             </tr>
                                             <tr>
-                                                <th>Tanggal BAP</th>
+                                                <th>Tanggal Selesai BAP</th>
                                                 <td><?= esc(date('d-m-Y', strtotime($bapdetails['b_tanggal']))) ?></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Tanggal Muat</th>
+                                                <td><?= esc(date('d-m-Y', strtotime($bapdetails['b_tanggal_muat']))) ?></td>
                                             </tr>
                                             <tr>
                                                 <th>Tanggal Kejadian</th>
@@ -363,19 +367,43 @@
                                             </tr>
                                             <tr>
                                                 <th>Cash</th>
-                                                <td><?= esc($bapdetails['b_cash']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_cash'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_cash']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Transfer</th>
-                                                <td><?= esc($bapdetails['b_transfer']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_transfer'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_transfer']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Klasifikasi Kasus</th>
-                                                <td><?= esc($bapdetails['b_klasifikasi']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_klasifikasi'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_klasifikasi']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Keterangan</th>
-                                                <td><?= esc($bapdetails['b_keterangan']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_keterangan'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_keterangan']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <?php if (userpermission('lr_view_userby')) { ?>
                                             <tr>

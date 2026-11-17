@@ -26,10 +26,12 @@ class Reports extends BaseController
         $this->driversModel = model('DriversModel');
         $this->vehicleModel = model('VehicleModel');
         $this->reportModel = model('ReportModel');
+        $this->jobdescModel = model('JobdescModel');
         $this->session = \Config\Services::session();
         
         helper('url');
     }
+
 
     // public function getRegencies($province_id) 
     // {
@@ -146,7 +148,45 @@ class Reports extends BaseController
         $data['baplist'] = $this->driversModel->get_bap();
         $data['postData'] = $postData;
 
-        return view('reports/report_bap', $data);
+        return view('reports/reportBap/report_bap', $data);
+    }
+
+    public function bap_summary()
+    {
+        $postData = $this->request->getPost();
+
+        if(isset($postData['bapreport'])) {
+            $bap_from = !empty($postData['bap_from']) ? $postData['bap_from'] : null;
+            $bap_to = !empty($postData['bap_to']) ? $postData['bap_to'] : null;
+            $bap_name = !empty($postData['bap_name']) ? $postData['bap_name'] : null;
+            $driver_status = !empty($postData['driver_status']) ? $postData['driver_status'] : null;
+            $case_type = !empty($postData['case_type']) ? $postData['case_type'] : null;
+            $classification = !empty($postData['classification']) ? $postData['classification'] : null;
+            $payment = !empty($postData['payment']) ? $postData['payment'] : null;
+        
+            $bapreport = $this->reportModel->bap_reports(
+                $postData['bap_from'],
+                $postData['bap_to'],
+                $postData['bap_name'],
+                $postData['driver_status'],
+                $postData['case_type'],
+                $postData['classification'],
+                $postData['payment']
+            );
+            
+            if(empty($bapreport)) {
+                $this->session->setFlashdata('warningmessage', 'Tidak ada data BAP');
+                $data['bap'] = '';
+            } else {
+                $this->session->remove('warningmessage');
+                $data['bap'] = $bapreport;
+            }
+        }
+        
+        $data['baplist'] = $this->driversModel->get_bap();
+        $data['postData'] = $postData;
+
+        return view('reports/reportBap/report_bap_summary', $data);
     }
 
     public function laka()
@@ -390,6 +430,50 @@ class Reports extends BaseController
         return view('reports/report_handover', $data);
     }
 
+    public function jobdesc()
+    {
+        $postData = $this->request->getPost();
+
+        if(isset($postData['jobdescreport'])) {
+            $jobdescreport = $this->reportModel->jobdesc_reports(
+                $postData['jk_divisi'] ?? null,
+                $postData['jk_nama_karyawan'] ?? null
+            );
+
+            if(empty($jobdescreport)) {
+                $this->session->setFlashdata('warningmessage', 'Tidak ada data Jobdesc KPI.');
+                $data['jobdesc'] = [];
+            } else {
+                $this->session->remove('warningmessage');
+                $data['jobdesc'] = $jobdescreport;
+            }
+        }
+
+        $data['divisi_list'] = $this->jobdescModel->get_distinct_divisi();
+        $data['karyawan_list'] = $this->jobdescModel->get_distinct_karyawan();
+        $data['postData'] = $postData;
+
+        return view('reports/report_jobdesc', $data);
+    }
+
+    public function get_karyawan_by_divisi()
+    {
+        $divisi = trim((string) $this->request->getGet('divisi'));
+
+        if ($divisi === '') {
+            return $this->response->setJSON(['error' => 'Divisi is required']);
+        }
+
+        
+        $karyawan = $this->jobdescModel->get_karyawan_by_divisi($divisi);
+
+        if ($karyawan) {
+            return $this->response->setJSON($karyawan);
+        }
+
+        return $this->response->setJSON(['error' => 'No karyawan found']);
+    }
+
 
     public function export_driver_pdf()
     {
@@ -619,6 +703,128 @@ class Reports extends BaseController
             'title' => 'Laporan Data Handover'
         ];
         return streamPdf('handover/handover_pdf', $data, "Handover_Report_" . date('Y-m-d') . ".pdf", true);
+    }
+
+    public function export_jobdesc_pdf()
+    {
+        $reportModel = new ReportModel();
+
+        $jobdescreport = $reportModel->jobdesc_reports(
+            $this->request->getGet('jk_divisi') ?? null,
+            $this->request->getGet('jk_nama_karyawan') ?? null
+        );
+
+        if (empty($jobdescreport)) {
+            session()->setFlashdata('error', 'Tidak ada data untuk diexport');
+            return redirect()->to('reports/jobdesc');
+        }
+
+        $data = [
+            'jobdesc' => $jobdescreport,
+            'title' => 'Laporan Jobdesc KPI'
+        ];
+        return streamPdf('jobdesc/jobdesc_pdf', $data, "Jobdesc_Report_" . date('Y-m-d') . ".pdf", true);
+    }
+
+    public function export_jobdesc_excel()
+    {
+        $jobdescreport = $this->reportModel->jobdesc_reports(
+            $this->request->getGet('jk_divisi') ?? null,
+            $this->request->getGet('jk_nama_karyawan') ?? null
+        );
+
+        if (empty($jobdescreport)) {
+            session()->setFlashdata('warningmessage', 'Tidak ada data untuk diexport.');
+            return redirect()->to('reports/jobdesc');
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Jobdesc Report');
+
+        // Header kolom
+        $headers = [
+            'A1' => 'No',
+            'B1' => 'Nama Divisi',
+            'C1' => 'Nama Karyawan',
+        ];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $headers[Coordinate::stringFromColumnIndex(3 + $i) . '1'] = 'Indikator ' . $i;
+        }
+
+        foreach ($headers as $cell => $value) {
+            $sheet->setCellValue($cell, $value);
+        }
+
+        // Style header: bold, center, border, background
+        $headerStyle = [
+            'font' => ['bold' => true],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFD9E1F2'],
+            ],
+        ];
+        $sheet->getStyle('A1:' . Coordinate::stringFromColumnIndex(15) . '1')->applyFromArray($headerStyle);
+
+        // Isi data
+        $row = 2;
+        $no = 1;
+        foreach ($jobdescreport as $jobdesc) {
+            $sheet->setCellValue("A{$row}", $no);
+            $sheet->setCellValue("B{$row}", $jobdesc['jk_divisi'] ?? '');
+            $sheet->setCellValue("C{$row}", $jobdesc['jk_nama_karyawan'] ?? '');
+
+            for ($i = 1; $i <= 12; $i++) {
+                $value = $jobdesc["jk_indikator_{$i}"] ?? '';
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex(3 + $i) . "{$row}", ($value === null || $value === '') ? '-' : $value);
+            }
+
+            $row++;
+            $no++;
+        }
+
+        // Style data rows: border + wrap text
+        $dataStyle = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_TOP,
+                'wrapText' => true,
+            ],
+        ];
+        $lastRow = $row - 1;
+        if ($lastRow >= 2) {
+            $sheet->getStyle("A2:" . Coordinate::stringFromColumnIndex(15) . "{$lastRow}")->applyFromArray($dataStyle);
+        }
+
+        // Auto-width kolom
+        foreach (range(1, 15) as $col) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setAutoSize(true);
+        }
+
+        // Download file
+        $filename = 'Jobdesc_Report_' . date('Y-m-d') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     /**
@@ -855,22 +1061,24 @@ class Reports extends BaseController
         $headers = [
             'A1' => 'No',
             'B1' => 'No BAP',
-            'C1' => 'Tanggal',
-            'D1' => 'Tanggal BAP',
-            'E1' => 'Tanggal Kejadian',
-            'F1' => 'Nama Supir',
-            'G1' => 'Mobil',
-            'H1' => 'Jenis Muatan',
-            'I1' => 'Keberangakatan',
-            'J1' => 'Lokasi Kejadian',
-            'K1' => 'Kronologi Kasus',
-            'L1' => 'Jenis Kasus',
-            'M1' => 'Realisasi Klaim',
-            'N1' => 'Potong Tagihan',
-            'O1' => 'Cash',
-            'P1' => 'Transfer',
-            'Q1' => 'Klasifikasi Kasus',
-            'R1' => 'Status Supir',
+            'C1' => 'Tanggal Muat',
+            'D1' => 'Tanggal Kejadian',
+            'E1' => 'Tanggal Input BAP',
+            'F1' => 'Tanggal Selesai BAP',
+            'G1' => 'Nama Supir',
+            'H1' => 'Mobil',
+            'I1' => 'Jenis Muatan',
+            'J1' => 'Keberangakatan',
+            'K1' => 'Lokasi Kejadian',
+            'L1' => 'Kronologi Kasus',
+            'M1' => 'Jenis Kasus',
+            'N1' => 'Realisasi Klaim',
+            'O1' => 'Potong Tagihan',
+            'P1' => 'Cash',
+            'Q1' => 'Transfer',
+            'R1' => 'Klasifikasi Kasus',
+            'S1' => 'Status Supir',
+            'T1' => 'Status BAP',
         ];
 
         foreach ($headers as $cell => $value) {
@@ -894,7 +1102,7 @@ class Reports extends BaseController
                 'startColor' => ['argb' => 'FFD9E1F2'],
             ],
         ];
-        $sheet->getStyle('A1:R1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:T1')->applyFromArray($headerStyle);
 
         // Isi data
         $row = 2;
@@ -902,33 +1110,53 @@ class Reports extends BaseController
         foreach ($bapreport as $bap) {
             $sheet->setCellValue("A{$row}", $no);
             $sheet->setCellValue("B{$row}", $bap['b_code'] ?? '');
-            $sheet->setCellValue("C{$row}", date('d-m-Y', strtotime($bap['b_created_date'])) ?? '');
+            $sheet->setCellValue("C{$row}", date('d-m-Y', strtotime($bap['b_tanggal_muat'])) ?? '');
+            $sheet->setCellValue("D{$row}", date('d-m-Y', strtotime($bap['b_tanggal_kejadian'])) ?? '');
+            $sheet->setCellValue("E{$row}", date('d-m-Y', strtotime($bap['b_created_date'])) ?? '');
             if(empty($bap['b_tanggal']) || $bap['b_tanggal'] == '0000-00-00' || $bap['b_tanggal'] == '0000-00-00 00:00:00') {
-                $sheet->setCellValue("D{$row}", '00-00-0000');
+                $sheet->setCellValue("F{$row}", '00-00-0000');
             }
             else {
-                $sheet->setCellValue("D{$row}", $bap['b_tanggal']);
+                $sheet->setCellValue("F{$row}", date('d-m-Y', strtotime($bap['b_tanggal'])) ?? '');
             }
-            $sheet->setCellValue("E{$row}", date('d-m-Y', strtotime($bap['b_tanggal_kejadian'])) ?? '');
-            $sheet->setCellValue("F{$row}", $bap['b_supir'] ?? '');
-            $sheet->setCellValue("G{$row}", $bap['b_nopol'] ?? '');
-            $sheet->setCellValue("H{$row}", $bap['b_muatan'] ?? '');
-            $sheet->setCellValue("I{$row}", $bap['b_keberangkatan'] ?? '');
-            $sheet->setCellValue("J{$row}", $bap['b_lokasi_kejadian'] ?? '');
-            $sheet->setCellValue("K{$row}", $bap['b_kondisi_barang'] ?? '');
-            $sheet->setCellValue("L{$row}", $bap['b_jenis_kasus'] ?? '');
+            $sheet->setCellValue("G{$row}", $bap['b_supir'] ?? '');
+            $sheet->setCellValue("H{$row}", $bap['b_nopol'] ?? '');
+            $sheet->setCellValue("I{$row}", $bap['b_muatan'] ?? '');
+            $sheet->setCellValue("J{$row}", $bap['b_keberangkatan'] ?? '');
+            $sheet->setCellValue("K{$row}", $bap['b_lokasi_kejadian'] ?? '');
+            $sheet->setCellValue("L{$row}", $bap['b_kondisi_barang'] ?? '');
+            $sheet->setCellValue("M{$row}", $bap['b_jenis_kasus'] ?? '');
             $parseValue = preg_replace('/[^0-9]/', '', (string)($bap['b_realisasi_klaim'] ?? ''));
-            $sheet->setCellValue("M{$row}", ($parseValue === '') ? 0 : (int)$parseValue);
-            $sheet->setCellValue("N{$row}", $bap['b_potong_tagihan'] ?? '');
+            $sheet->setCellValue("N{$row}", ($parseValue === '') ? 0 : (int)$parseValue);
+            $sheet->setCellValue("O{$row}", $bap['b_potong_tagihan'] ?? '');
             $parseValue = preg_replace('/[^0-9]/', '', (string)($bap['b_cash'] ?? ''));
-            $sheet->setCellValue("O{$row}", ($parseValue === '') ? 0 : (int)($parseValue));
-            $parseValue = preg_replace('/[^0-9]/', '', (string)($bap['b_transfer'] ?? ''));
             $sheet->setCellValue("P{$row}", ($parseValue === '') ? 0 : (int)($parseValue));
-            $sheet->setCellValue("Q{$row}", $bap['b_klasifikasi'] ?? '');
+            $parseValue = preg_replace('/[^0-9]/', '', (string)($bap['b_transfer'] ?? ''));
+            $sheet->setCellValue("Q{$row}", ($parseValue === '') ? 0 : (int)($parseValue));
+            $sheet->setCellValue("R{$row}", $bap['b_klasifikasi'] ?? '');
             if ($bap['d_is_active'] == '1') {
-                $sheet->setCellValue("R{$row}", 'Aktif');
+                $sheet->setCellValue("S{$row}", 'Aktif');
             } else {
-                $sheet->setCellValue("R{$row}", 'Inactive');
+                $sheet->setCellValue("S{$row}", 'Inactive');
+            }
+            if ($bap['b_is_status'] == 1) {
+                $sheet->setCellValue("T{$row}", 'Pending');
+                $sheet->getStyle("T{$row}")->applyFromArray([
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['argb' => 'FFFFEB9C'],
+                    ],
+                    'font' => ['color' => ['argb' => 'FF9C6500']],
+                ]);
+            } else {
+                $sheet->setCellValue("T{$row}", 'Done');
+                $sheet->getStyle("T{$row}")->applyFromArray([
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['argb' => 'FFC6EFCE'],
+                    ],
+                    'font' => ['color' => ['argb' => 'FF006100']],
+                ]);
             }
             $row++;
             $no++;
@@ -944,19 +1172,24 @@ class Reports extends BaseController
         ];
         $lastRow = $row - 1;
         if ($lastRow >= 2) {
-            $sheet->getStyle("A2:R{$lastRow}")
-                  ->getNumberFormat()
-                  ->setFormatCode('RP#,##0')
+            $sheet->getStyle("A2:T{$lastRow}")
                   ->applyFromArray($dataStyle);
-        }
 
+            $sheet->getStyle("A2{$lastRow}")
+                  ->getNumberFormat()
+                  ->setFormatCode(NumberFormat::FORMAT_GENERAL);
+
+            $sheet->getStyle("M2:Q2{$lastRow}")
+                  ->getNumberFormat()
+                  ->setFormatCode('RP#,##0');
+        }
         // Auto-width kolom
-        foreach (range('A', 'R') as $col) {
+        foreach (range('A', 'T') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
         // Download file
-        $filename = 'Bap_Report_' . date('Y-m-d') . '.xlsx';
+        $filename = 'Bap_Report_' . date('d-m-Y') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -1215,7 +1448,7 @@ class Reports extends BaseController
         }
 
         // Download file
-        $filename = 'Survey_Report_' . date('Y-m-d') . '.xlsx';
+        $filename = 'Survey_Report_' . date('d-m-Y') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -1418,6 +1651,25 @@ class Reports extends BaseController
             $sheet->setCellValue("L{$row}", date('d-m-Y', strtotime($vehicle['v_kir_process_date'])) ?? '');
             $sheet->setCellValue("M{$row}", $vehicle['v_lokasi_kir'] ?? '');
             $sheet->setCellValue("N{$row}", $vehicle['v_notes'] ?? '');
+            if ($vehicle['v_is_active'] == 0) {
+                $sheet->setCellValue("O{$row}", 'Tidak Aktif');
+                $sheet->getStyle("O{$row}")->applyFromArray([
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['argb' => 'FF675C'],
+                    ],
+                    'font' => ['color' => ['argb' => 'A30000']],
+                ]);
+            } else {
+                $sheet->setCellValue("O{$row}", 'Aktif');
+                $sheet->getStyle("O{$row}")->applyFromArray([
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['argb' => 'FFC6EFCE'],
+                    ],
+                    'font' => ['color' => ['argb' => 'FF006100']],
+                ]);
+            }
             $row++;
             $no++;
         }

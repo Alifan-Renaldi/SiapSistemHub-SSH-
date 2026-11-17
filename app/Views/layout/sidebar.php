@@ -119,6 +119,16 @@ $secondSegment = $segments[1] ?? '';
             </li>
              <?php endif; ?>
 
+             <?php if (function_exists('userpermission') && userpermission('lr_vech_list_inactive')) : ?>
+            <li class="nav-item">
+              <a href="<?= base_url('vehicles/vehicles_management_inactive'); ?>"
+                class="nav-link <?= ($firstSegment === 'vehicles' && $secondSegment === 'vehicles_management_inactive') ? 'active' : '' ?>">
+                <span class="nav-icon" style="width: 2.25rem; display: inline-block;"></span>
+                <p>Vehicle List Inactive</p>
+              </a>
+            </li>
+             <?php endif; ?>
+
             <?php if (function_exists('userpermission') && userpermission('lr_vech_list_invent')) : ?>
             <li class="nav-item">
               <a href="<?= base_url('inventory/inventory_management'); ?>"
@@ -149,6 +159,7 @@ $secondSegment = $segments[1] ?? '';
             </li>
             <?php endif; ?>
           </ul>
+        </li>
           
        
 
@@ -211,6 +222,39 @@ $secondSegment = $segments[1] ?? '';
           </ul>
         </li>
 
+        <?php if (function_exists('userpermission') && (userpermission('lr_kpi_list') || userpermission('lr_kpi_pending_list'))) : ?>
+        <li class="nav-item has-treeview <?= ($firstSegment === 'jobdesc') ? 'menu-open' : '' ?>">
+          <a href="#" class="nav-link <?= ($firstSegment === 'jobdesc') ? 'active' : '' ?>">
+            <i class="nav-icon fa fa-suitcase"></i>
+            <p>
+              Jobdesc Management
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+
+            <ul class="nav nav-treeview">
+            <?php if (function_exists('userpermission') && userpermission('lr_kpi_list')) : ?>
+            <li class="nav-item">
+              <a href="<?= base_url('jobdesc/kpi_management'); ?>"
+                class="nav-link <?= ($firstSegment === 'jobdesc' && in_array($secondSegment, ['kpi_management', 'add_indikator', 'edit_indikator', 'view_kpi'])) ? 'active' : '' ?>">
+                <span class="nav-icon" style="width: 2.25rem; display: inline-block;"></span>
+                <p>KPI Management</p>
+              </a>
+            </li>
+            <?php endif; ?>
+            <?php if (function_exists('userpermission') && userpermission('lr_kpi_pending_list')) : ?>
+            <li class="nav-item">
+              <a href="<?= base_url('jobdesc/kpi_nilai_management'); ?>"
+                class="nav-link <?= ($firstSegment === 'jobdesc' && in_array($secondSegment, ['kpi_nilai_management', 'view_kpi_nilai', 'add_nilai'])) ? 'active' : '' ?>">
+                <span class="nav-icon" style="width: 2.25rem; display: inline-block;"></span>
+                <p>KPI Nilai (Pending)</p>
+              </a>
+            </li>
+            <?php endif; ?>
+          </ul>
+        </li>
+        <?php endif; ?>
+
         <?php if (function_exists('userpermission') && userpermission('lr_reports')) : ?>
         <li class="nav-item has-treeview <?= ($firstSegment === 'reports') ? 'menu-open' : '' ?>">
           <a href="#" class="nav-link <?= ($firstSegment === 'reports') ? 'active' : '' ?>">
@@ -234,7 +278,7 @@ $secondSegment = $segments[1] ?? '';
             <?php endif; ?>
             <?php if (function_exists('userpermission') && userpermission('lr_reports_bap')) : ?>
             <li class="nav-item">
-              <a href="<?= base_url('reports/bap'); ?>"
+              <a href="<?= base_url('reports/reportBap/bap'); ?>"
                 class="nav-link <?= ($firstSegment === 'reports' && $secondSegment === 'bap') ? 'active' : '' ?>">
                 <span class="nav-icon" style="width: 2.25rem; display: inline-block;"></span>
                 <p>BAP</p>
@@ -301,6 +345,15 @@ $secondSegment = $segments[1] ?? '';
                 class="nav-link <?= ($firstSegment === 'reports' && $secondSegment === 'handover') ? 'active' : '' ?>">
                 <span class="nav-icon" style="width: 2.25rem; display: inline-block;"></span>
                 <p>Handover</p>
+              </a>
+            </li>
+            <?php endif; ?>
+            <?php if (function_exists('userpermission') && userpermission('lr_reports')) : ?>
+            <li class="nav-item">
+              <a href="<?= base_url('reports/jobdesc'); ?>"
+                class="nav-link <?= ($firstSegment === 'reports' && $secondSegment === 'jobdesc') ? 'active' : '' ?>">
+                <span class="nav-icon" style="width: 2.25rem; display: inline-block;"></span>
+                <p>Jobdesc</p>
               </a>
             </li>
             <?php endif; ?>

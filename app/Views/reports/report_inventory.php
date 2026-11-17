@@ -271,54 +271,23 @@
 $(document).ready(function() {
     function initDatepicker(element) {
         element.datepicker({
-            format: 'yyyy/mm/dd',
+            format: 'dd-mm-yyyy',
             autoclose: true,
             todayHighlight: true
         });
     }
 
     function handleInventorySelection() {
-        var selectedInvent = $('#check_status').val();
-        var fromDate = $('#invent_from');
-        var toDate = $('#invent_to');
-        var inventType = $('#invent_type');
-        var vechType = $('#vech_type');
-        var nopol = $('#nopol');
+        $('#invent_from, #invent_to').each(function() {
+            var dateInput = $(this);
 
-        if (selectedInvent === '1') {
-            nopol.prop('disabled', true).val('').trigger('change');
-        } else {
-            nopol.prop('disabled', false);
-        }
+            dateInput.prop('readonly', false).removeAttr('required');
 
-        if (selectedInvent === '0' || selectedInvent === 'all status') {
-            fromDate.prop('readonly', false);
-            toDate.prop('readonly', false);
-
-            if (!fromDate.hasClass('hasDatepicker')) {
-                fromDate.addClass('datepicker');
-                initDatepicker(fromDate);
+            if (!dateInput.hasClass('hasDatepicker')) {
+                dateInput.addClass('datepicker');
+                initDatepicker(dateInput);
             }
-            if (!toDate.hasClass('hasDatepicker')) {
-                toDate.addClass('datepicker');
-                initDatepicker(toDate);
-            }
-        } else {
-            fromDate.prop('readonly', true).val('').datepicker('destroy');
-            toDate.prop('readonly', true).val('').datepicker('destroy');
-            fromDate.removeClass('datepicker').attr('type', 'text');
-            toDate.removeClass('datepicker').attr('type', 'text');
-        }
-
-        if (selectedInvent === 'all status') {
-            // Hanya "all status" yang mengizinkan inventory type
-            vechType.prop('disabled', true).val(null).trigger('change');
-            inventType.prop('disabled', false);
-        } else {
-            // "Done" dan "Yet": kunci inventory type
-            vechType.prop('disabled', false);
-            inventType.prop('disabled', true).val('').trigger('change');
-        }
+        });
     }
 
     function toggleActionButtons(show) {
@@ -357,29 +326,30 @@ $(document).ready(function() {
 
     function resetAllFilters()
     {
-        $('#check_status').val('all status').trigger('change');
-        $('#nopol').val('').trigger('change');
-        $('#invent_type').val('').trigger('change');
-        $('.select2-multiple-type').val(null).trigger('change');
-        $('#invent_from').val('');
-        $('#invent_to').val('');
-        // $('.select2').val(null).trigger('change');
-        if ($('#invent_from').hasClass('hasDatepicker')) {
+    $('#check_status').val('all status').trigger('change');
+    $('#nopol').val('').trigger('change');
+    $('#invent_type').val('').trigger('change');
+    $('.select2-multiple-type').val(null).trigger('change');
+    $('#invent_from').val('');
+    $('#invent_to').val('');
+    $('.select2').val(null).trigger('change');
+    
+    if ($('#invent_from').hasClass('hasDatepicker')) {
         $('#invent_from').datepicker('destroy');
-            }
-            if ($('#invent_to').hasClass('hasDatepicker')) {
-                $('#invent_to').datepicker('destroy');
-            }
+        }
+        if ($('#invent_to').hasClass('hasDatepicker')) {
+            $('#invent_to').datepicker('destroy');
+        }
         
-            if ($.fn.DataTable.isDataTable('.datatableexportvehicle')) {
-                $('.datatableexportvehicle').DataTable().destroy();
-            }
+        if ($.fn.DataTable.isDataTable('.datatableexportvehicle')) {
+            $('.datatableexportvehicle').DataTable().destroy();
+        }
         
-        $('.datatableexportvehicle tbody').empty();
-        $('.datatableexportvehicle').hide();
-        $('#dataCount').text('0');
-        toggleActionButtons(false);
-        handleInventorySelection();
+    $('.datatableexportvehicle tbody').empty();
+    $('.datatableexportvehicle').hide();
+    $('#dataCount').text('0');
+    toggleActionButtons(false);
+    handleInventorySelection();
     }
 
     $('.datepicker').each(function() {

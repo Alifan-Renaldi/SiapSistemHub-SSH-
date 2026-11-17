@@ -207,6 +207,17 @@
                             date('d/m/Y', strtotime($vehicledetails[0]['v_exp_insurance'])) : '') ?>" class="form-control datepickerpastdisable" placeholder="Tanggal Berlaku Asuransi">
                         </div>
                     </div>
+
+                    <div class="col-sm-6 col-md-4">
+                            <div class="form-group">
+                                <label for="v_jenis_mobil" class="form-label">Status Jenis Mobil<span class="form-required" style="color: red;">*</span></label>
+                                <select id="v_jenis_mobil" name="v_jenis_mobil" class="form-control" required>
+                                    <option value="" disabled>Select Vehicle Status</option> 
+                                    <option <?= (isset($vehicledetails) && $vehicledetails[0]['v_jenis_mobil'] == 1) ? 'selected' : '' ?> value="1">Kecil</option> 
+                                    <option <?= (isset($vehicledetails) && $vehicledetails[0]['v_jenis_mobil'] == 0) ? 'selected' : '' ?> value="0">Besar</option> 
+                                </select>
+                            </div>
+                        </div>
                     
                     <div class="col-sm-6 col-md-12">
                         <div class="form-group">

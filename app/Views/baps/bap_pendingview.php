@@ -228,7 +228,13 @@
                                             </tr>
                                             <tr>
                                                 <th>Lokasi Muat</th>
-                                                <td><?= esc($bapdetails['b_lokasi_muat']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_lokasi_muat'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_lokasi_muat']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Lokasi Bongkar</th>
@@ -249,7 +255,7 @@
                                                 <td><?= esc($bapdetails['b_code']) ?></td>
                                             </tr>
                                             <tr>
-                                                <th>Tanggal BAP</th>
+                                                <th>Tanggal Selesai BAP</th>
                                                 <td>
                                                     <?php 
                                                         $bap_date = $bapdetails['b_tanggal'];
@@ -262,9 +268,21 @@
                                                 </td>
                                             </tr>
                                             <tr>
+                                                <th>Tanggal Muat</th>
+                                                    <td>
+                                                        <?php 
+                                                                $bap_date_muat = $bapdetails['b_tanggal_muat'];
+                                                                if (empty($bap_date_muat) || $bap_date_muat == null || $bap_date_muat == null) {
+                                                                    echo '00-00-0000';
+                                                                } else {
+                                                                    echo esc(date('d-m-Y', strtotime($bap_date_muat)));
+                                                                }
+                                                            ?>
+                                                    </td>
+                                            </tr>
+                                            <tr>
                                                 <th>Tanggal Kejadian</th>
-                                                <td><?= esc(date('d-m-Y', strtotime($bapdetails['b_tanggal_kejadian']))) ?>
-                                                </td>
+                                                <td><?= esc(date('d-m-Y', strtotime($bapdetails['b_tanggal_kejadian']))) ?></td>
                                             </tr>
                                             <tr>
                                                 <th>Lokasi Kejadian</th>
@@ -280,11 +298,23 @@
                                             </tr>
                                             <tr>
                                                 <th>Posisi Barang</th>
-                                                <td><?= esc($bapdetails['b_posisi_barang']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_posisi_barang'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_posisi_barang']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Kronologi Kejadian</th>
-                                                <td><?= esc($bapdetails['b_kronologi_kejadian']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_kronologi_kejadian'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_kronologi_kejadian']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -351,7 +381,13 @@
                                         <tbody>
                                             <tr>
                                                 <th>Korelasi Kasus</th>
-                                                <td><?= esc($bapdetails['b_korelasi_kasus']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_korelasi_kasus'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_korelasi_kasus']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Estimasi Klaim</th>
@@ -359,27 +395,62 @@
                                             </tr>
                                             <tr>
                                                 <th>Realisasi Klaim</th>
-                                                <td><?= esc($bapdetails['b_realisasi_klaim']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_realisasi_klaim'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_realisasi_klaim']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Potong Tagihan</th>
-                                                <td><?= esc($bapdetails['b_potong_tagihan']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_potong_tagihan'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_potong_tagihan']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Cash</th>
-                                                <td><?= esc($bapdetails['b_cash']) ?></td>
+                                                <td><?php if (empty($bapdetails['b_cash'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_cash']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Transfer</th>
-                                                <td><?= esc($bapdetails['b_transfer']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_transfer'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_transfer']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Klasifikasi Kasus</th>
-                                                <td><?= esc($bapdetails['b_klasifikasi']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_klasifikasi'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_klasifikasi']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Keterangan</th>
-                                                <td><?= esc($bapdetails['b_keterangan']) ?></td>
+                                                <td>
+                                                    <?php if (empty($bapdetails['b_keterangan'])): ?>
+                                                        <?php echo '-' ?>
+                                                    <?php else : ?>
+                                                        <?= esc($bapdetails['b_keterangan']) ?>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                             <?php if (userpermission('lr_view_userby')) { ?>
                                             <tr>

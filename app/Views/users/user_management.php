@@ -57,14 +57,13 @@
                         </td>
                         <td>
                            <?php if (function_exists('userpermission') && userpermission('lr_edit_user')) : ?>
-                                    <a href="<?= base_url('users/edituser/' . $userlists['u_id']) ?>"><i class="fa fa-edit"></i></a>
-
-                                    | <form action="<?= base_url('users/deleteuser/' . $userlists['u_id']) ?>" 
+                                    <a href="<?= base_url('users/edituser/' . $userlists['u_id']) ?>" class="btn btn-link text-primary p-0 border-0"><i class="fa fa-edit"></i></a>
+                           
+                                    | <form id="delete-form-<?= $userlists['u_id'] ?>" action="<?= base_url('users/deleteuser/' . $userlists['u_id']) ?>" 
                                           method="post" 
-                                          style="display: inline;" 
-                                          onsubmit="return confirm('Yakin hapus user ini?')">
+                                          style="display: inline;">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-link text-danger p-0 border-0"><i class="fa fa-trash"></i></button>
+                                        <button type="button" class="btn btn-link text-danger p-0 border-0" onclick="confirmDeleteUser(<?= $userlists['u_id'] ?>, '<?= $userlists['u_name'] ?>')"><i class="fa fa-trash"></i></button>
                                     </form>
                                 <?php endif; ?>
                         </td>
@@ -80,9 +79,6 @@
 <?= view('layout/footer') ?>
 
 <script>
-function confirmDelete() {
-    return confirm("Apakah anda yakin ingin menghapus data ini?");
-}
 
 $(function () {
     var table = $('#custtbl').DataTable({
@@ -114,4 +110,20 @@ $(function () {
         });
     }).draw();
 });
+
+function confirmDeleteUser(id, name) {
+    Swal.fire({
+        title: 'Apakah anda yakin menghapus data user tersebut?',
+        html: 'Nama User : <b>' + name + '</b>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Hapus'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
+}
 </script>

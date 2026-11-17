@@ -153,6 +153,11 @@ if (!file_exists(FCPATH . $loading_logo)) {
                      <i class="fas fa-id-card-alt"></i> Vehicle Owner
                   </a>
                   <?php endif; ?>
+                  <?php if (function_exists('userpermission') && userpermission('lr_vech_list')) : ?>
+                  <a href="<?= base_url('vehicles/vehicles_management_kecil'); ?>" class="btn btn-info mr-2">
+                     <i class="fas fa-car"></i> Mobil Kecil
+                  </a>
+                  <?php endif; ?>
                </div>
                <div id="table-filter" class="d-flex align-items-center">
                   <span class="mr-2">Search:</span>
@@ -177,7 +182,8 @@ if (!file_exists(FCPATH . $loading_logo)) {
                      </tr>
                   </thead>
                   <tbody>
-                     <?php if(!empty($vehiclelist)) { $count = 1; foreach($vehiclelist as $vehiclelists) { ?>
+                     <?php if(!empty($vehiclelist)) 
+                        { $count = 1; foreach($vehiclelist as $vehiclelists) { ?>
                      <tr
                         data-modified-date="<?= esc($vehiclelists['v_modified_date'] ?? '') ?>"
                         data-v-type="<?= esc($vehiclelists['v_type'] ?? '') ?>"

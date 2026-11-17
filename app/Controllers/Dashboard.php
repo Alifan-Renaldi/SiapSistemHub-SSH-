@@ -34,9 +34,11 @@ class Dashboard extends BaseController
 
         $reminderYellow = $dashboardModel->get_reminders_yellow();
         $reminderRed = $dashboardModel->get_reminders_red();
+        $driverStatus = $dashboardModel->getDriverStatusCounts();
 
         $data = [
             'dashboard' => $dashboardData,
+            'driverStatus' => $driverStatus,
             'todayreminder' => $reminderData,
             'iechart' => $incomeexpenseData,
             'vehicles' => $vehiclesData,

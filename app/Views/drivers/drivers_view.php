@@ -31,7 +31,7 @@
 
                         <p class="text-muted text-center"><?= ucwords(esc($driverdetails['d_nis'])) ?></p>
 
-                        <div class="text-center">
+                        <div class="d-flex justify-content-center">
                             <img src="<?= (!empty($driverdetails['d_photo'])) ? base_url('assets/uploads/drivers/') . esc($driverdetails['d_photo']) : base_url('assets/images/default-user.png') ?>" 
                                  alt="Driver Photo" style="max-width:200px; max-height:250px; object-fit:cover;">
                         </div>

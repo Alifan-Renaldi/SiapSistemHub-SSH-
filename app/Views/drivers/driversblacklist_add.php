@@ -85,7 +85,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Tanggal Resign</label>
-                                            <input type="text" name="d_resigndate" id="d_resigndate" value="<?= isset($driverdetails[0]['d_resigndate']) && $driverdetails[0]['d_resigndate'] !== '0000-00-00' ? date('d-m-Y', strtotime($driverdetails[0]['d_resigndate'])) : '' ?>" class="form-control datepicker" placeholder="Tanggal Resign">
+                                            <input type="text" name="d_resigndate" id="d_resigndate" class="form-control datepicker" value="<?= isset($driverdetails[0]['d_resigndate']) && $driverdetails[0]['d_resigndate'] !== '0000-00-00' ? date('d-m-Y', strtotime($driverdetails[0]['d_resigndate'])) : '' ?>" placeholder="Tanggal Keluar">
                                         </div>
                                     </div>
                                     <?php endif; ?>
@@ -98,7 +98,7 @@
 
                                     <div class="col-md-12">
                                         <div class="form-group">
-                                            <label class="form-label">Kasus<span class="form-required" style="color: red;">*</span></label>
+                                            <label class="form-label">Kasus</label>
                                             <input type="text" name="d_notes_blacklist" class="form-control" value="<?= (isset($driverdetails)) ? esc($driverdetails[0]['d_notes_blacklist']) : esc($old_input['d_notes_blacklist'] ?? '') ?>" oninput="this.value = capitalizeEachWord(this.value)">
                                         </div>
                                     </div>
@@ -182,7 +182,6 @@
             }
         });
     });
-
     function hitungUmur(tanggalLahir) {
         if (!tanggalLahir) {
             $('#d_age').val('');

@@ -1,4 +1,3 @@
-
 <?= view('layout/header') ?>
 <?= view('layout/sidebar') ?>
 <?php
@@ -357,7 +356,7 @@ if (!file_exists(FCPATH . $loading_logo)) {
       <div class="col-lg-6 mb-4">
         <div class="card shadow-sm mb-4">
           <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Status Mobil</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Status Supir</h6>
           </div>
           <div class="card-body">
             <div class="chart-pie pt-5 pb-4">
@@ -365,13 +364,13 @@ if (!file_exists(FCPATH . $loading_logo)) {
             </div>
             <div class="mt-4 text-center small">
               <span class="mr-2">
-                <i class="fas fa-circle text-success"></i> Idle
+                <i class="fas fa-circle text-success"></i> Aktif
               </span>
               <span class="mr-2">
-                <i class="fas fa-circle text-primary"></i> In Trip
+                <i class="fas fa-circle text-danger"></i> Tidak Aktif
               </span>
               <span class="mr-2">
-                <i class="fas fa-circle text-info"></i> Maintenance
+                <i class="fas fa-circle text-dark"></i> Blacklist
               </span>
             </div>
           </div>
@@ -423,31 +422,6 @@ if (!file_exists(FCPATH . $loading_logo)) {
         </div>
       </div>
     </div>
-      <!-- Vehicle Status Chart
-      <div class="col-lg-6 mb-4">
-        <div class="card shadow-sm mb-4">
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Status Supir</h6>
-          </div>
-          <div class="card-body">
-            <div class="chart-pie pt-4 pb-2">
-              <canvas id="statusDriverChart" height="250"></canvas>
-            </div>
-            <div class="mt-4 text-center small">
-              <span class="mr-2">
-                <i class="fas fa-circle text-success"></i> Idle
-              </span>
-              <span class="mr-2">
-                <i class="fas fa-circle text-primary"></i> In Trip
-              </span>
-              <span class="mr-2">
-                <i class="fas fa-circle text-info"></i> Maintenance
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> -->
 
     <!-- Vehicle Information Row -->
     <div class="row">
@@ -541,6 +515,16 @@ if (!file_exists(FCPATH . $loading_logo)) {
                         <td>Unit Mobil</td>
                         <td class="text-success font-weight-bold"><?= esc($dashboard['tot_vehicles_active']) ?></td>
                         <td class="text-danger font-weight-bold"><?= esc($dashboard['tot_vehicles_inactive']) ?></td>
+                      </tr>
+                      <tr>
+                        <td>Unit Mobil Besar</td>
+                        <td class="text-success font-weight-bold"><?= esc($dashboard['tot_vehicles_active_besar']) ?></td>
+                        <td class="text-danger font-weight-bold"><?= esc($dashboard['tot_vehicles_inactive_besar']) ?></td>
+                      </tr>
+                      <tr>
+                        <td>Unit Mobil Kecil</td>
+                        <td class="text-success font-weight-bold"><?= esc($dashboard['tot_vehicles_active_kecil']) ?></td>
+                        <td class="text-danger font-weight-bold"><?= esc($dashboard['tot_vehicles_inactive_kecil']) ?></td>
                       </tr>
                 </tbody>
               </table>
@@ -637,7 +621,7 @@ window.addEventListener('load', function() {
 });
 
 // Set new default font family and font color to mimic Bootstrap's default styling
-Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+Chart.defaults.global.defaultFontFamily = 'Roboto', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#858796';
 
 // Income and Expenses Chart
@@ -762,68 +746,103 @@ ieChart = new Chart(ctx, {
 // Status Pie Chart
 var ctx2 = document.getElementById("statusPieChart");
 var statusPieChart = null;
+
+// Draws percentage + total of the hovered status inside the doughnut hole.
+// Nothing is drawn when the pointer is not over a segment.
+var driverStatusCenterText = {
+  afterDraw: function (chart) {
+    if (!chart || chart.config.type !== 'doughnut' || !chart.$driverHover) { return; }
+
+    var meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data || !meta.data.length) { return; }
+
+    var arc = meta.data[0];
+    if (!arc || !arc._model) { return; }
+
+    var hover = chart.$driverHover;
+    var isDark = document.body.classList.contains('dark-mode');
+    var fontFamily = Chart.defaults.global.defaultFontFamily;
+    var pctFont = Math.max(22, Math.min(34, Math.round(chart.height * 0.12)));
+    var totalFont = Math.max(12, Math.round(pctFont * 0.42));
+    var gap = Math.max(2, Math.round(pctFont * 0.08));
+    var pctLine = Math.round(pctFont * 0.9);
+    var totalLine = Math.round(totalFont * 1.2);
+    var blockTop = arc._model.y - ((pctLine + gap + totalLine) / 2);
+    var pctColor = hover.color;
+
+    if (hover.index === 2) {
+      pctColor = isDark ? '#f8f9fc' : '#2d2d2d';
+    }
+
+    var c = chart.ctx;
+    c.save();
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.font = '700 ' + pctFont + 'px ' + fontFamily;
+    c.fillStyle = pctColor;
+    c.fillText(hover.pct + '%', arc._model.x, blockTop + (pctLine / 2));
+    c.font = '400 ' + totalFont + 'px ' + fontFamily;
+    c.fillStyle = isDark ? '#cfcfcf' : '#858796';
+    c.fillText(hover.value + ' supir', arc._model.x, blockTop + pctLine + gap + (totalLine / 2));
+    c.restore();
+  }
+};
+
+if (window.Chart && Chart.plugins) {
+  Chart.plugins.register(driverStatusCenterText);
+}
+
 if (ctx2) {
 statusPieChart = new Chart(ctx2, {
   type: 'doughnut',
   data: {
-    labels: ["Idle", "In Trip", "Maintenance"],
+    labels: ["Aktif", "Tidak Aktif", "Blacklist"],
     datasets: [{
-      data: [55, 30, 15],
-      backgroundColor: ['#1cc88a', '#4e73df', '#36b9cc'],
-      hoverBackgroundColor: ['#17a673', '#2e59d9', '#2c9faf'],
+      data: [
+        <?= (int) ($driverStatus['active'] ?? 0) ?>,
+        <?= (int) ($driverStatus['inactive'] ?? 0) ?>,
+        <?= (int) ($driverStatus['blacklist'] ?? 0) ?>
+      ],
+      backgroundColor: ['#1cc88a', '#e74a3b', '#2d2d2d'],
+      hoverBackgroundColor: ['#17a673', '#c0392b', '#000000'],
       hoverBorderColor: "rgba(234, 236, 244, 1)",
     }],
   },
   options: {
     maintainAspectRatio: false,
     tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
+      enabled: false
     },
     legend: {
       display: false
     },
     cutoutPercentage: 80,
-  },
-});
-}
+    onHover: function (evt, active) {
+      var chart = statusPieChart;
+      if (!chart) { return; }
 
-var ctx3 = document.getElementById("statusDriverChart");
-var statusDriverChart = null;
-if (ctx3) {
-statusDriverChart = new Chart(ctx3, {
-  type: 'doughnut',
-  data: {
-    labels: ["Idle", "In Trip", "Maintenance"],
-    datasets: [{
-      data: [55, 30, 15],
-      backgroundColor: ['#1cc88a', '#4e73df', '#36b9cc'],
-      hoverBackgroundColor: ['#17a673', '#2e59d9', '#2c9faf'],
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
+      var idx = (active && active.length) ? active[0]._index : null;
+      var prev = (typeof chart.$driverHoverIndex === 'number') ? chart.$driverHoverIndex : null;
+      if (idx === prev) { return; }
+
+      chart.$driverHoverIndex = idx;
+      if (idx === null) {
+        chart.$driverHover = null;
+      } else {
+        var ds = chart.data.datasets[0];
+        var val = Number(ds.data[idx]) || 0;
+        var total = ds.data.reduce(function (a, b) { return a + Number(b); }, 0);
+        var pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+        var colors = ds.backgroundColor;
+        chart.$driverHover = {
+          index: idx,
+          value: val,
+          pct: pct,
+          color: (Array.isArray(colors) && colors[idx]) || '#333'
+        };
+      }
+      chart.draw();
     },
-    legend: {
-      display: false
-    },
-    cutoutPercentage: 80,
   },
 });
 }
@@ -913,6 +932,11 @@ $(document).ready(function() {
   try {
     document.addEventListener('theme:changed', function (ev) {
       try { updateChartColorsSafe(ev && ev.detail ? ev.detail.theme : 'light'); } catch (e) {}
+      try {
+        if (typeof statusPieChart !== 'undefined' && statusPieChart && statusPieChart.$driverHover) {
+          statusPieChart.draw();
+        }
+      } catch (e) {}
     });
   } catch (e) {}
   // Chart type toggle

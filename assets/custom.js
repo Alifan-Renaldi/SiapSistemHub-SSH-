@@ -781,9 +781,9 @@ $(document).ready(function() {
             b_kondisi_barang: {
                 required: "Kondisi Barang belum terisi",
             },
-            b_tanggal: {
-                required: "Tanggal BAP belum terisi",
-            },
+            // b_tanggal: {
+            //     required: "Tanggal BAP belum terisi",
+            // },
             b_korelasi_kasus: {
                 required: "Korelasi Kasus belum terisi",
             },

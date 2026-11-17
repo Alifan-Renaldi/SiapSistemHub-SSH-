@@ -1,6 +1,7 @@
 <?php namespace App\Models;
 
 use CodeIgniter\Model;
+use CodeIgniter\Database\RawSql;
 
 class ReportModel extends Model
 {
@@ -52,8 +53,8 @@ class ReportModel extends Model
         }
 
         if (!empty($bap_from) && !empty($bap_to)) {
-            $builder->where("baps.b_created_date >=", $bap_from)
-                   ->where("baps.b_created_date <=", $bap_to);
+            $builder->where('baps.b_created_date >=', $bap_from)
+                   ->where('baps.b_created_date <=', $bap_to);
         }
 
         if ($driver_status !== null && $driver_status !== '') {
@@ -72,7 +73,7 @@ class ReportModel extends Model
             $builder->where('baps.b_potong_tagihan', $payment);
         }
 
-        return $builder->orderBy('baps.b_id', 'DESC')
+        return $builder->orderBy('baps.b_created_date', 'DESC')
                       ->get()
                       ->getResultArray();
     }
@@ -137,9 +138,11 @@ class ReportModel extends Model
     public function training_reports ($training_from, $training_to, $training_status, $driver_status, $training_count)
     {
         $builder = $this->db->table('trainings')
-                            ->select('trainings.*, drivers.d_is_active, users.u_name as creator_name')
-                            ->join('drivers', 'drivers.d_nis = trainings.tr_nis', 'left')
-                            ->join('users', 'trainings.tr_created_by = users.u_id', 'left');
+                            ->select('trainings.*, MAX(drivers.d_is_active) AS d_is_active, users.u_name as creator_name')
+                            ->join('drivers', new RawSql("FIND_IN_SET(drivers.d_nis, REPLACE(trainings.tr_nis, ' ', ''))"), 'left')
+                            ->join('users', 'trainings.tr_created_by = users.u_id', 'left')
+                            ->groupBy('trainings.tr_id')
+                            ->groupBy('users.u_name');
 
         if($training_status !== 'all training' && $training_status !== null && $training_status !== '') {
             $builder->where('trainings.tr_supir', $training_status);
@@ -274,6 +277,22 @@ class ReportModel extends Model
                        ->getResultArray();
     }
 
-    
+    public function jobdesc_reports($divisi, $karyawan)
+    {
+        $builder = $this->db->table('jobdesc_kpi');
+
+        if (!empty($divisi) && $divisi !== 'all') {
+            $builder->where('jobdesc_kpi.jk_divisi', $divisi);
+        }
+
+        if (!empty($karyawan) && $karyawan !== 'all') {
+            $builder->where('jobdesc_kpi.jk_nama_karyawan', $karyawan);
+        }
+
+        return $builder->orderBy('jobdesc_kpi.jk_created_date', 'DESC')
+                       ->get()
+                       ->getResultArray();
+    }
+
 
 }

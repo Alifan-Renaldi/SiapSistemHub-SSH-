@@ -206,15 +206,21 @@
             <h4 style="margin: 5px 0;">Identitas Kejadian</h4>
             <table class="form-table">
                 <tr>
+                    <th>Tanggal Muat</th>
+                    <?php if ($bapdetails[0]['b_tanggal_muat'] == null): ?>
+                    <td style="width: 80px;">0/0</td>
+                    <?php elseif (!empty($bapdetails[0]['b_tanggal_muat'])): ?>
+                    <td><?= esc(date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_muat']))); ?></td>
+                    <?php endif; ?>
                     <th>Tanggal Kejadian</th>
                     <td><?= esc(date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_kejadian']))); ?></td>
                     <th>Jenis Kasus</th>
-                    <td><?= esc($bapdetails[0]['b_jenis_kasus']); ?></td>
+                    <td ><?= esc($bapdetails[0]['b_jenis_kasus']); ?></td>
                 </tr>
                 <tr>
-                    <th>Lokasi Kejadian</th>
+                    <th colspan="2">Lokasi Kejadian</th>
                     <td><?= esc($bapdetails[0]['b_lokasi_kejadian']); ?></td>
-                    <th>Estimasi Klaim</th>
+                    <th colspan="2">Estimasi Klaim</th>
                     <td><?= esc($bapdetails[0]['b_estimasi_klaim']); ?></td>
                 </tr>
             </table>

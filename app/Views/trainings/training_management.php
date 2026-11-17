@@ -311,9 +311,12 @@
 
                     <div class="form-group">
                         <label for="edit_tr_supir">Nama Supir<span class="form-required">*</span></label>
-                        <select id="edit_tr_supir" class="form-control select2" name="tr_supir" required>
+                        <select id="edit_tr_supir" class="form-control select2" name="tr_supir[]" multiple required>
                             <option value="">-- Pilih Supir --</option>
-                            <?php 
+                            <?php
+                            usort($driverlist, function($a, $b) {
+                                return strcmp($a['d_name'], $b['d_name']);
+                            }); 
                             foreach ($driverlist as $driver) {
                                 if ($driver['d_is_active'] == 1) {
                                     echo '<option value="' . esc($driver['d_name']) . '" data-nis="' . esc($driver['d_nis']) . '">' . esc($driver['d_name']) . '</option>';
@@ -588,7 +591,6 @@
                                     <th width="22%" class="text-center">Kode Training</th>
                                     <th width="13%" class="text-center">Tanggal</th>
                                     <th width="16%" class="text-center">Nama Supir</th>
-                                    <th width="13%" class="text-center">NIS</th>
                                     <th width="12%" class="text-center">Kategori</th>
                                     <th width="15%" class="text-center">Pemateri</th>
                                     <th width="10%" class="text-center">Lokasi</th>
@@ -696,7 +698,11 @@ $(document).ready(function () {
     });
 
     $('#edit_tr_supir').on('change', function() {
-        updateNIS(this, document.getElementById('edit_tr_nis'));
+        const nisList = [];
+        $('#edit_tr_supir option:selected').each(function() {
+            nisList.push($(this).data('nis') || '');
+        });
+        $('#edit_tr_nis').val(nisList.join(', '));
     });
 
     function updateNIS(selectElement, hiddenInputElement) {
@@ -743,11 +749,10 @@ $(document).on('click', '.edit-training', function(e) {
             }
             $('#edit_tr_document').val('');
 
-            const supirValue = d.tr_supir;
-            $('#edit_tr_supir').val(supirValue).trigger('change');
-
-            const nis = $('#edit_tr_supir').find(`option[value="${supirValue}"]`).data('nis') || '';
-            $('#edit_tr_nis').val(nis);
+            const supirArray = String(d.tr_supir || '').split(',').map(function(s){
+                return s.trim();
+            }).filter(Boolean);
+            $('#edit_tr_supir').val(supirArray).trigger('change');
 
             $('#editTrainingModal').modal('show');
         } else {
@@ -788,6 +793,12 @@ $('#trainingModal').on('show.bs.modal', function (e) {
     const addForm = document.getElementById('trainingForm');
     if (addForm) {
         addForm.addEventListener('submit', function(e) {
+            const nisList = [];
+            $('#tr_supir option:selected').each(function() {
+                nisList.push($(this).data('nis') || '');
+            });
+            $('#tr_nis').val(nisList.join(', '));
+
             if (!this.checkValidity()) {
                 e.preventDefault(); e.stopPropagation();
             }
@@ -820,6 +831,8 @@ $('#trainingModal').on('show.bs.modal', function (e) {
     const editForm = document.getElementById('editTrainingForm');
     if (editForm) {
         editForm.addEventListener('submit', function(e) {
+            
+
             if (!this.checkValidity()) {
                 e.preventDefault(); e.stopPropagation();
             }
@@ -968,7 +981,7 @@ $(document).on('click', 'a[href*="viewtraining"]', function(e) {
                     $('#viewTrainingModal').modal('show');
                 } else {
                     alert('Failed to load training details: ' + (response.message || 'Unknown error'));
-                }
+                } 
             } catch(e) {
                 console.error('Error parsing response:', e);
                 alert('Invalid response from server');
@@ -987,6 +1000,26 @@ $(document).on('click', 'a[href*="viewtraining"]', function(e) {
 });
 
 // ============== DETAIL TRAINING FUNCTIONALITY ==============
+function renderDriverNameLinks(driverName, driverNIS) {
+    const names = String(driverName || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    const nisList = String(driverNIS || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    const htmlName = names.map(function(name, i) {
+        const nis = nisList[i];
+        if (nis) {
+            return '<a href="' + baseUrl + 'drivers/viewdriver_by_nis/' + encodeURIComponent(nis) + '" style="font-weight:500; text-decoration:none; color:#007bff;" title="Lihat detail ' + name + '"><i class="fa fa-users mr-1"></i>' + name + '</a>';
+        }
+        return name;
+    });
+    const htmlNIS = nisList.map(function(nis, i) {
+        const name = names[i];
+        if (name) {
+            return '<a style="font-weight:500; text-decoration:none; color:#00000;" title="Lihat detail' + nis + '">' + nis + '</a>';
+        }
+        return nis;
+    });
+    $('#detailDriverName').html(htmlName.join(', '));
+    $('#detailDriverNIS').html(htmlNIS.join(', '));
+}
 $(document).on('click', '.btn-detail-training', function(e) {
     e.preventDefault();
     const driverName = $(this).data('driver-name');
@@ -997,8 +1030,7 @@ $(document).on('click', '.btn-detail-training', function(e) {
     }
     $('#modalDetailTema').modal('hide');
     $('#modalDetailTraining').modal('show');
-    $('#detailDriverName').text(driverName);
-    $('#detailDriverNIS').text(driverNIS || '-');
+    renderDriverNameLinks(driverName, driverNIS);
     showLoadingState();
     fetchTrainingDetails(driverName);
 });
@@ -1031,17 +1063,17 @@ function fetchTrainingDetails(driverName) {
     });
 }
 function renderTrainingList(data, total) {
-    $('#loadingIndicator').hide(); $('#errorMessage').hide(); $('#emptyState').hide();
-    $('#trainingListContainer').show();
-    $('#detailTrainingCount').text(total);
-    const tbody = $('#trainingListBody'); tbody.empty();
-    data.forEach(function(training, index) {
-        const rowNumber = index + 1;
-        const keteranganTooltip = training.tr_keterangan && training.tr_keterangan !== '-' ? 'data-toggle="tooltip" data-placement="top" title="'+training.tr_keterangan+'"' : '';
-        const row = '<tr><td class="text-center">'+rowNumber+'</td><td class="text-center"><code>'+training.tr_code+'</code></td><td class="text-center">'+training.tr_tanggal+'</td><td class="text-center">'+ '<a href="#" class="btn-detail-tema text-success" data-tema-name="<?= esc($traininglist_driversdata['tr_tema']); ?>" style="cursor: pointer; text-decoration: none; font-weight: 500;">' + '<i class="fa fa-book mr-1"></i>'+ '<strong>' + training.tr_tema + '</strong>' + '</a></td>'+(training.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(training.tr_kategori)+'">'+training.tr_kategori+'</span></td><td class="text-center">'+training.tr_pemateri+'</td><td class="text-center">'+training.tr_lokasi+'</td></tr>';
-        tbody.append(row);
-    });
-    $('[data-toggle="tooltip"]').tooltip();
+        $('#loadingIndicator').hide(); $('#errorMessage').hide(); $('#emptyState').hide();
+        $('#trainingListContainer').show();
+        $('#detailTrainingCount').text(total);
+        const tbody = $('#trainingListBody'); tbody.empty();
+        data.forEach(function(training, index) {
+            const rowNumber = index + 1;
+            const keteranganTooltip = training.tr_keterangan && training.tr_keterangan !== '-' ? 'data-toggle="tooltip" data-placement="top" title="'+training.tr_keterangan+'"' : '';
+            const row = '<tr><td class="text-center">'+rowNumber+'</td><td class="text-center"><code>'+training.tr_code+'</code></td><td class="text-center">'+training.tr_tanggal+'</td><td class="text-center">'+ '<a href="#" class="btn-detail-tema text-success" data-tema-name="'+training.tr_tema+'" style="cursor: pointer; text-decoration: none; font-weight: 500;">' + '<i class="fa fa-book mr-1"></i>'+ '<strong>' + training.tr_tema + '</strong>' + '</a></td>'+(training.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(training.tr_kategori)+'">'+training.tr_kategori+'</span></td><td class="text-center">'+training.tr_pemateri+'</td><td class="text-center">'+training.tr_lokasi+'</td></tr>';
+            tbody.append(row);
+        });
+        $('[data-toggle="tooltip"]').tooltip();
 }
 function getCategoryBadgeClass(category) {
     const map = { 'Operasional': 'info', 'Bengkel': 'warning'};
@@ -1051,7 +1083,9 @@ function showLoadingState() { $('#loadingIndicator').show(); $('#errorMessage').
 function showErrorState(message) { $('#loadingIndicator').hide(); $('#emptyState').hide(); $('#trainingListContainer').hide(); $('#errorText').text(message); $('#errorMessage').show(); $('#detailTrainingCount').text('0'); }
 function showEmptyState() { $('#loadingIndicator').hide(); $('#errorMessage').hide(); $('#trainingListContainer').hide(); $('#emptyState').show(); $('#detailTrainingCount').text('0'); }
 $('#modalDetailTraining').on('hidden.bs.modal', function() {
-    $('#detailDriverName').text('-'); $('#detailDriverNIS').text('-'); $('#detailTrainingCount').text('0');
+    $('#detailDriverName').text('-');
+    $('#detailDriverNIS').text('-'); 
+    $('#detailTrainingCount').text('0');
     $('#trainingListBody').empty();
     $('#loadingIndicator').hide(); $('#errorMessage').hide(); $('#emptyState').hide(); $('#trainingListContainer').hide();
     $('[data-toggle="tooltip"]').tooltip('dispose');
@@ -1107,7 +1141,7 @@ function renderTemaList(data, total) {
     const tbody = $('#temaListBody'); tbody.empty();
     data.forEach(function(row, index) {
         const keteranganTooltip = row.tr_keterangan && row.tr_keterangan !== '-' ? 'data-toggle="tooltip" data-placement="top" title="'+row.tr_keterangan+'"' : '';
-        const html = '<tr><td class="text-center">'+(index+1)+'</td><td class="text-center"><code>'+row.tr_code+'</code></td><td class="text-center">'+row.tr_tanggal+'</td><td class="text-center"><strong class="text-primary">'+ '<a href="#" class="btn-detail-training text-primary" data-driver-name="<?= esc($traininglist_driversdata['tr_supir']); ?>" data-driver-nis="<?= esc($traininglist_driversdata['tr_nis']); ?>" style="cursor: pointer; text-decoration: none; font-weight: 500;">'+ '<i class="fa fa-users mr-1"></i>'+ '<strong>'+ row.tr_supir + '</strong>' + '</a>' +'</strong>'+(row.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center">'+row.tr_nis+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(row.tr_kategori)+'">'+row.tr_kategori+'</span></td><td class="text-center">'+row.tr_pemateri+'</td><td class="text-center">'+row.tr_lokasi+'</td></tr>';
+        const html = '<tr><td class="text-center">'+(index+1)+'</td><td class="text-center"><code>'+row.tr_code+'</code></td><td class="text-center">'+row.tr_tanggal+'</td><td class="text-center"><strong class="text-primary">'+ '<a href="#" class="btn-detail-training text-primary" data-driver-name="'+row.tr_supir+'" data-driver-nis="'+row.tr_nis+'" style="cursor: pointer; text-decoration: none; font-weight: 500;">'+ '<i class="fa fa-users mr-1"></i>'+ '<strong>'+ row.tr_supir + '</strong>' + '</a>' +'</strong>'+(row.tr_keterangan !== '-' ? ' <i class="text-muted ml-1" '+keteranganTooltip+'></i>' : '')+'</td><td class="text-center"><span class="badge badge-'+getCategoryBadgeClass(row.tr_kategori)+'">'+row.tr_kategori+'</span></td><td class="text-center">'+row.tr_pemateri+'</td><td class="text-center">'+row.tr_lokasi+'</td></tr>';
         tbody.append(html);
     });
     $('[data-toggle="tooltip"]').tooltip();
@@ -1123,9 +1157,9 @@ $('#modalDetailTema').on('hidden.bs.modal', function() {
 });
 // ============== END DETAIL TEMA FUNCTIONALITY ==============
 
-function confirmDelete() {
-    return confirm("Apakah anda yakin ingin menghapus data ini?");
-}
+// function confirmDelete() {
+//     return confirm("Apakah anda yakin ingin menghapus data ini?");
+// }
 
 function updateDateTime() {
     const now = new Date();

@@ -1,6 +1,7 @@
 <?php namespace App\Models;
 
 use CodeIgniter\Model;
+use CodeIgniter\Database\RawSql;
 
 class DriversModel extends Model
 {
@@ -550,7 +551,7 @@ class DriversModel extends Model
     public function get_training_by_nis($d_nis)
     {
         return $this->db->table('trainings')
-                       ->where('tr_nis', $d_nis)
+                       ->where(new RawSql("FIND_IN_SET('" . $this->db->escapeString($d_nis) ."', REPLACE(tr_nis, ' ', '')) > 0"))
                        ->get()
                        ->getResultArray();
     }

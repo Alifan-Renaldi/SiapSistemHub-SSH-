@@ -64,6 +64,7 @@
                         <th>Mobil</th>
                         <th>Jenis Muatan</th>
                         <th>Jenis Kasus</th>
+                        <th>Status BAP</th>
                         <th>Action</th>
                      </tr>
                   </thead>
@@ -82,6 +83,11 @@
                         <td> <?= esc($baplist_driversdata['b_muatan']); ?></td>
                         <td> <?= esc($baplist_driversdata['b_jenis_kasus']); ?></td>
                         <td>
+                            <?php if($baplist_driversdata['b_is_status'] == 1): ?>
+                                <span class="badge badge-warning">Pending</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
                             <?php 
                             $status = 'Inactive';
                             $badgeClass = 'badge-danger';
@@ -98,7 +104,7 @@
                             }
                             ?>
 
-                            <?php if ($isEditable && userpermission('lr_drivers_edit_bap')): ?>
+                            <?php if (userpermission('lr_drivers_edit_bap')): ?>
                                 <form action="<?= base_url('baps/editbap_pending') ?>" method="POST" style="display: inline;">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="bap_id" value="<?= $baplist_driversdata['b_id'] ?>">
@@ -119,7 +125,7 @@
                                 <i class="fa fa-print text-info" title="Print"></i>
                             </a>
                            <?php endif;?>
-                           <?php if ($isEditable && userpermission('lr_drivers_delete_bap')): ?>
+                           <?php if (userpermission('lr_drivers_delete_bap')): ?>
                                     | <form action="<?= base_url('drivers/bappending_delete/' . $baplist_driversdata['b_id']) ?>" 
                                           method="post" 
                                           style="display: inline;" 

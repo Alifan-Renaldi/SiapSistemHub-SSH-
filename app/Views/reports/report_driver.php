@@ -95,7 +95,8 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="driver_from" class="form-label">Report From</label>
-                        <input type="text" class="form-control form-control-sm datepicker"value="<?= isset($postData['driver_from']) ? $postData['driver_from'] : ''; ?>" 
+                        <input type="text" class="form-control form-control-sm datepicker"
+                        value="<?= isset($postData['driver_from']) ? $postData['driver_from'] : ''; ?>" 
                                id="driver_from" name="driver_from" placeholder="Date From">
                     </div>
                 </div>
@@ -294,49 +295,26 @@
     const baseUrl = "<?= base_url() ?>"; 
     enableAutoLogout(7200, baseUrl + "login");
     
-$(document).ready(function() {
-    // Inisialisasi datepicker
+    $(document).ready(function() {
     function initDatepicker(element) {
         element.datepicker({
-            format: 'yyyy/mm/dd',
+            format: 'dd-mm-yyyy',
             autoclose: true,
             todayHighlight: true
         });
     }
 
-    // Mengatur readonly, mengosongkan, dan menonaktifkan datepicker
     function handleDriverSelection() {
-        var selectedDriver = $('#driver_name').val();
-        var fromDate = $('#driver_from');
-        var toDate = $('#driver_to');
-        
-        if (selectedDriver === 'all') {
-            // Jika "All Driver" dipilih
-            fromDate.prop('readonly', true).val('').datepicker('destroy');
-            toDate.prop('readonly', true).val('').datepicker('destroy');
-            fromDate.removeAttr('required');
-            toDate.removeAttr('required');
-            
-            // Elemen input biasa (non-datepicker)
-            fromDate.removeClass('datepicker').attr('type', 'text');
-            toDate.removeClass('datepicker').attr('type', 'text');
-        } else {
-            // Jika pilihan lain dipilih
-            fromDate.prop('readonly', false);
-            toDate.prop('readonly', false);
-            fromDate.removeAttr('required');
-            toDate.removeAttr('required');
-            
-            // Inisialisasi ulang datepicker
-            if (!fromDate.hasClass('hasDatepicker')) {
-                fromDate.addClass('datepicker');
-                initDatepicker(fromDate);
+         $('#driver_from, #driver_to').each(function() {
+            var dateInput = $(this);
+
+            dateInput.prop('readonly', false).removeAttr('required');
+
+            if (!dateInput.hasClass('hasDatepicker')) {
+                dateInput.addClass('datepicker');
+                initDatepicker(dateInput);
             }
-            if (!toDate.hasClass('hasDatepicker')) {
-                toDate.addClass('datepicker');
-                initDatepicker(toDate);
-            }
-        }
+        });
     }
 
     function toggleActionButtons(show) {
@@ -448,7 +426,7 @@ $('#printReport').click(function() {
         if (day.length < 2) day = '0' + day;
         if (month.length < 2) month = '0' + month;
 
-        return day + '/' + month + '/' + year;
+        return day + '-' + month + '-' + year;
     }
 
     // Function to format time to HH:MM

@@ -105,9 +105,16 @@
 
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label class="form-label">Tanggal Kejadian<span class="form-required" style="color: red;">*</span></label>
-                                            <input type="text" name="b_tanggal_kejadian" id="b_tanggal_kejadian" value="<?= old('b_tanggal_kejadian', isset($bapdetails[0]['b_tanggal_kejadian']) && $bapdetails[0]['b_tanggal_kejadian'] !== '0000-00-00' ? date('d/m/Y', strtotime($bapdetails[0]['b_tanggal_kejadian'])) : '') ?>" class="form-control datepicker form-equal-height" placeholder="Tanggal Kejadian">
+                                            <label class="form-label">Tanggal Muat</label>
+                                            <input type="text" name="b_tanggal_muat" id="b_tanggal_muat" value="<?= old('b_tanggal_muat', isset($bapdetails[0]['b_tanggal_muat']) && $bapdetails[0]['b_tanggal_muat'] !== null ? date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_muat'])) : null) ?>" class="form-control datepicker form-equal-height" placeholder="Tanggal Muat">
                                         </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Tanggal Kejadian<span class="form-required" style="color: red;">*</span></label>
+                                            <input type="text" name="b_tanggal_kejadian" id="b_tanggal_kejadian" value="<?= old('b_tanggal_kejadian', isset($bapdetails[0]['b_tanggal_kejadian']) && $bapdetails[0]['b_tanggal_kejadian'] !== '0000-00-00' ? date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_kejadian'])) : '') ?>" class="form-control datepicker form-equal-height" placeholder="Tanggal Kejadian">
+                                        </div>  
                                     </div>
                                     
                                     <div class="col-md-6">
@@ -193,13 +200,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label class="form-label">Kronologi Singkat / Kondisi Barang / Riwayat Kejadian<span class="form-required" style="color: red;">*</span></label>
-                                            <textarea class="form-control" name="b_kondisi_barang" rows="3" oninput="this.value = capitalizeEachWord(this.value)"><?= isset($bapdetails) ? esc($bapdetails[0]['b_kondisi_barang']) : '' ?></textarea>
-                                        </div>
-                                    </div>
-
+                                    
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Keberangkatan<span class="form-required" style="color: red;">*</span></label>
@@ -212,7 +213,7 @@
                                             </select>
                                         </div>
                                     </div>
-
+                                    
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label class="form-label">Estimasi Klaim<span class="form-required" style="color: red;">*</span></label>
@@ -223,6 +224,13 @@
                                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_estimasi_klaim'] == 'Rp.10.000.000 - Rp.50.000.000') ? 'selected' : '' ?> value="Rp.10.000.000 - Rp.50.000.000">Rp.10.000.000 - Rp.50.000.000</option>
                                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_estimasi_klaim'] == '>Rp.50.000.000') ? 'selected' : '' ?> value=">Rp.50.000.000">>Rp.50.000.000</option>
                                             </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label">Kronologi Singkat / Kondisi Barang / Riwayat Kejadian<span class="form-required" style="color: red;">*</span></label>
+                                            <textarea class="form-control" name="b_kondisi_barang" rows="3" oninput="this.value = capitalizeEachWord(this.value)"><?= isset($bapdetails) ? esc($bapdetails[0]['b_kondisi_barang']) : '' ?></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -280,7 +288,7 @@
                         <div class="form-group">
                             <label class="form-label">Tanggal BAP<span class="form-required" style="color: red;">*</span></label>
                             <input type="text" name="b_tanggal" id="b_tanggal"
-                            value="<?= isset($bapdetails) ? esc($bapdetails[0]['b_tanggal']) : '' ?>"
+                            value="<?= old('b_tanggal', isset($bapdetails[0]['b_tanggal']) && $bapdetails[0]['b_tanggal'] !== '0000-00-00' ? date('d-m-Y', strtotime($bapdetails[0]['b_tanggal'])) : '') ?>"
                             class="form-control datepicker">
                         </div>
                     </div>

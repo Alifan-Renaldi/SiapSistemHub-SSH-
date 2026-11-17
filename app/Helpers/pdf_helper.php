@@ -21,6 +21,7 @@ function renderPdf(string $view, array $data = [], string $filename = 'document.
 
     $options = new Options();
     $options->set('defaultFont', $config->defaultFont);
+    $options->set('isJavascriptEnabled', false);
     // Remote fetching MUST stay disabled: on a single-worker dev server, Dompdf
     // requesting images over HTTP from this same server deadlocks the download.
     // All views must reference local file paths (see pdf_local_image()).
@@ -80,6 +81,7 @@ function streamPdf(string $view, array $data = [], string $filename = 'document.
 
     $options = new Options();
     $options->set('defaultFont', $config->defaultFont);
+    $options->set('isJavascriptEnabled', false);
     // Remote fetching MUST stay disabled: on a single-worker dev server, Dompdf
     // requesting images over HTTP from this same server deadlocks the download.
     // All views must reference local file paths (see pdf_local_image()).

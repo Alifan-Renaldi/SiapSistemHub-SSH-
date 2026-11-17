@@ -122,12 +122,23 @@
 
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label class="form-label">Tanggal Muat</label>
+                                            <?php if (userpermission('lr_drivers_edit_bappending')): ?>
+                                                <input type="text" name="b_tanggal_muat" id="b_tanggal_muat" value="<?= (isset($bapdetails) && !empty($bapdetails[0]['b_tanggal_muat']) && $bapdetails[0]['b_tanggal_muat'] !== '0000-00-00') ? esc(date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_muat']))) : ''; ?>" class="form-control datepicker">
+                                            <?php else: ?>
+                                                <input type="text" name="b_tanggal_muat" id="b_tanggal_muat" value="<?= (isset($bapdetails) && !empty($bapdetails[0]['b_tanggal_muat']) && $bapdetails[0]['b_tanggal_muat'] !== '0000-00-00') ? esc(date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_muat']))) : ''; ?>" class="form-control" readonly>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label class="form-label">Tanggal Kejadian</label>
                                             <?php if (userpermission('lr_drivers_edit_bappending')): ?>
                                                 <span class="form-required" style="color: red; font-size: 20px;">*</span>
-                                                <input type="text" name="b_tanggal_kejadian" id="b_tanggal_kejadian" value="<?= (isset($bapdetails)) ? esc($bapdetails[0]['b_tanggal_kejadian']) : ''; ?>" class="form-control datepicker form-equal-height">
+                                                <input type="text" name="b_tanggal_kejadian" id="b_tanggal_kejadian" value="<?= (isset($bapdetails) && !empty($bapdetails[0]['b_tanggal_kejadian']) && $bapdetails[0]['b_tanggal_kejadian'] !== '0000-00-00') ? esc(date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_kejadian']))) : ''; ?>" class="form-control datepicker form-equal-height">
                                             <?php else: ?>
-                                                <input type="text" name="b_tanggal_kejadian" id="b_tanggal_kejadian" value="<?= (isset($bapdetails)) ? esc($bapdetails[0]['b_tanggal_kejadian']) : ''; ?>" class="form-control" readonly>
+                                                <input type="text" name="b_tanggal_kejadian" id="b_tanggal_kejadian" value="<?= (isset($bapdetails) && !empty($bapdetails[0]['b_tanggal_kejadian']) && $bapdetails[0]['b_tanggal_kejadian'] !== '0000-00-00') ? esc(date('d-m-Y', strtotime($bapdetails[0]['b_tanggal_kejadian']))) : ''; ?>" class="form-control" readonly>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -161,7 +172,19 @@
                                                         if (isset($bapdetails[0]['b_supir']) && $bapdetails[0]['b_supir'] == $driver['d_name'] && $driver['d_is_active'] == 1) {
                                                             $selected = 'selected';
                                                         }
+                                                        elseif (isset($bapdetails[0]['b_supir']) && $bapdetails[0]['b_supir'] == $driver['d_name'] && $driver['d_is_active'] == 0) {
+                                                            $selected = 'selected';
+                                                        }
+                                                        elseif (isset($bapdetails[0]['b_supir']) && $bapdetails[0]['b_supir'] == $driver['d_name'] && $driver['d_is_active'] == 2) {
+                                                            $selected = 'selected';
+                                                        }
                                                         if ($driver['d_is_active'] == 1) {
+                                                            echo '<option value="' . esc($driver['d_name']) . '" data-nis="' . esc($driver['d_nis']) . '" ' . $selected . '>' . esc($driver['d_name']) . '</option>';
+                                                        }
+                                                        elseif ($driver['d_is_active'] == 0) {
+                                                            echo '<option value="' . esc($driver['d_name']) . '" data-nis="' . esc($driver['d_nis']) . '" ' . $selected . '>' . esc($driver['d_name']) . '</option>';
+                                                        }
+                                                        elseif ($driver['d_is_active'] == 2) {
                                                             echo '<option value="' . esc($driver['d_name']) . '" data-nis="' . esc($driver['d_nis']) . '" ' . $selected . '>' . esc($driver['d_name']) . '</option>';
                                                         }
                                                     }
@@ -346,9 +369,9 @@
                 <div class="row">
                     <div class="col-sm-6 col-md-3">
                         <div class="form-group">
-                            <label class="form-label">Tanggal BAP
+                            <label class="form-label">Tanggal Selesai BAP
                                 <?php if (userpermission('lr_drivers_edit_bapsolution')): ?>
-                                    <span class="form-required" style="color: red;">*</span></label>
+                                    </label>
                                     <input type="text" name="b_tanggal" id="b_tanggal"
                                         value="<?= (isset($bapdetails) && $bapdetails[0]['b_tanggal'] !== '0000-00-00') ? esc($bapdetails[0]['b_tanggal']) : ''; ?>" class="form-control datepicker">
                                         <!-- <div id="b_tanggal_error" class="text-danger" style="display:none; font-size: 12px;">Tanggal BAP harus diisi dengan tanggal yang valid.
@@ -416,6 +439,7 @@
                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'POT. SUJ 30%') ? 'selected' : ''; ?> value="POT. SUJ 30%">POT. SUJ 30%</option>
                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'POT. SUJ Langsung') ? 'selected' : ''; ?> value="POT. SUJ Langsung">POT. SUJ Langsung</option>
                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'POT. SUJ Bertahap') ? 'selected' : ''; ?> value="POT. SUJ Bertahap">POT. SUJ Bertahap</option>
+                                <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'POT Langsung Insentif Supir') ? 'selected' : ''; ?> value="POT Langsung Insentif Supir">POT Langsung Insentif Supir</option>
                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'CASH') ? 'selected' : ''; ?> value="CASH">CASH</option>
                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'CASH + SUJ 30%') ? 'selected' : ''; ?> value="CASH + SUJ 30%">CASH + SUJ 30%</option>
                                 <option <?= (isset($bapdetails) && $bapdetails[0]['b_potong_tagihan'] == 'Tunggu Nilai Klaim') ? 'selected' : ''; ?> value="Tunggu Nilai Klaim">Tunggu Nilai Klaim</option>
@@ -1292,6 +1316,21 @@
         showNotification('<?= session()->getFlashdata('successmessage') ?>', 'success');
     <?php endif; ?>
 });
+
+if (typeof jQuery !== 'undefined' && jQuery.fn.datepicker) {
+        $('.datepicker').datepicker('destroy').datepicker({
+            format: 'dd-mm-yyyy',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $('.datepickerpastdisable').datepicker('destroy').datepicker({
+            format: 'dd-mm-yyyy',
+            autoclose: true,
+            startDate: new Date(),
+            todayHighlight: true
+        });
+    }
 </script>
 
 <style>
